@@ -3,4 +3,5 @@ Image Downloader for DCinside TWICE gallery.
 
 현재 멀티 쓰레드가 작동하지 않는 문제점이 있습니다.
 
+# License
 GNU General Public License v3.0
