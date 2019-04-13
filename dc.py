@@ -82,7 +82,9 @@ class Worker(QObject):
     # Download images from posts to directory
     @pyqtSlot()
     def download_image(self, url, filename, directory, subject=''):
-        print('Download: %s' % filename)
+        # print('Download: %s' % filename)
+        self.finished.emit('다운로드 중: %s' % filename)
+
         if not os.path.isdir(directory):
             os.makedirs(directory)
 
@@ -103,13 +105,22 @@ class Worker(QObject):
         time.sleep(0.3)
         
     # Main function
-    @pyqtSlot()
-    def main(self, idx, search, page, by, rcmd, excpt, sprt, drtry):
-        self.finished.emit('다운로드를 시작합니다.')
+    @pyqtSlot(list)
+    def main(self, list_): #, idx, search, page, by, rcmd, excpt, sprt, drtry):
+        idx = list_[0]
+        search = list_[1]
+        page = list_[2]
+        by = list_[3]
+        rcmd = list_[4]
+        excpt = list_[5]
+        sprt = list_[6]
+        drtry = list_[7]
+
+        self.finished.emit('다운로드 작업을 시작합니다.')
         is_major = self.check_gall(idx)
         url = '%s%s' % ((self._major_url if is_major else self._minor_url), self._gall_id[idx])
 
-        self.finished.emit('갤러리 체크 완료')
+        self.finished.emit('갤러리 체크 완료. 키워드 필터링 작업 중입니다.')
         
         page = page.replace(" ", "") # Replace " " (space) to "" (null)
         page_number = page.split(",")
@@ -121,8 +132,8 @@ class Worker(QObject):
             else:
                 self.get_page(url, i, rcmd)
 
-        print('search filter')
         # Filter subjects including search words and "by" word
+        # print('search filter')
         search_word = search.split(",")
         if search_word:
             for i in search_word:
@@ -145,8 +156,8 @@ class Worker(QObject):
                 self._search_link.append(self._init_link[j])
                 self._search_number.append(self._init_number[j])
 
-        print('Remove except word')
         # Remove elements including except keywords from lists
+        # print('Remove except word')
         except_word = excpt.split(",")        
         for i in except_word:   
             if i == '':
@@ -163,14 +174,19 @@ class Worker(QObject):
             self._search_link.remove(self._except_link[i])
             self._search_number.remove(self._except_number[i])
 
+        '''
         print(len(self._search_subject))
         for i in self._search_subject:
             print(i)
+        '''
 
-        print('get post')
+        #print('get post')
+        self.finished.emit('이미지 다운로드를 시작합니다.')
         self.get_image(sprt, drtry)
+        self.finished.emit('다운로드를 완료하였습니다.')
 
-
+'''
 if __name__ == '__main__':
     session = dc()
-    session.main(2, 'gif','20 - 30', 1, 1, '', 0, 'C:\\Users\\Sean\\Desktop\\TWICE 이미지 다운로더\\test')
+    session.main(2, 'gif','20 - 30', 1, 1, '', 0, 'C:\\Users\\Sean\\Desktop\\TWICE 이미지 다운로더\\test\\')
+'''
