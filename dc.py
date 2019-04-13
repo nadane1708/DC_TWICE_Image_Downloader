@@ -22,17 +22,6 @@ class Worker(QObject):
 
         self._gall_id = ['twice', 'twicetv', 'nayeone', 'jungyeon', 'momo', 'sanarang', 'jihyo', 'twicemina', 'dahyeon', 'sonchaeyoung', 'tzuyu0614']
 
-        self._init_subject = []
-        self._init_link = []
-        self._init_number = []
-        self._search_subject = []
-        self._search_link = []
-        self._search_number = []
-
-        self._except_subject = []
-        self._except_link = []
-        self._except_number = []
-
     # Check if the gallery is major or minor
     @pyqtSlot()
     def check_gall(self, idx):
@@ -74,16 +63,16 @@ class Worker(QObject):
             img_data = postSoup.find("ul", {"class": "appending_file"}).find_all("a")
 
             for j in img_data:
+                self.finished.emit('다운로드 중 (%s/%s): %s' % (i + 1, len(self._search_subject), j.text))
                 if sprt:
                     self.download_image(j.get("href"), j.text, drtry, '[%s] %s' % (self._search_number[i], self._search_subject[i]))
                 else:
-                    self.download_image(j.get("href"), j.text, drtry)
+                    self.download_image(j.get("href"), '[%s] %s' % (self._search_number[i], j.text), drtry)
 
     # Download images from posts to directory
     @pyqtSlot()
     def download_image(self, url, filename, directory, subject=''):
         # print('Download: %s' % filename)
-        self.finished.emit('다운로드 중: %s' % filename)
 
         if not os.path.isdir(directory):
             os.makedirs(directory)
@@ -106,7 +95,19 @@ class Worker(QObject):
         
     # Main function
     @pyqtSlot(list)
-    def main(self, list_): #, idx, search, page, by, rcmd, excpt, sprt, drtry):
+    def main(self, list_):
+        
+        self._init_subject = []
+        self._init_link = []
+        self._init_number = []
+        self._search_subject = []
+        self._search_link = []
+        self._search_number = []
+
+        self._except_subject = []
+        self._except_link = []
+        self._except_number = []
+
         idx = list_[0]
         search = list_[1]
         page = list_[2]
