@@ -4,7 +4,7 @@ Image Downloader for DCinside TWICE gallery.
 디시인사이드 TWICE 갤러리 짤 다운로더
 
 # Caution
-본 프로그램은 Python 3.6 & PyQt5 으로 작성되었으며, 프로그램 사용에 의해 발생하는 모든 책임은 사용자 본인에게 있습니다.
+본 프로그램은 Python 3.6.8 & PyQt5 으로 작성되었으며, 프로그램 사용에 의해 발생하는 모든 책임은 사용자 본인에게 있습니다.
 
 # Description
 TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https://gall.dcinside.com/board/lists/?id=twice)와 멤버 갤러리([나](https://gall.dcinside.com/board/lists/?id=nayeone)[정](https://gall.dcinside.com/mgallery/board/lists/?id=jungyeon)[모](https://gall.dcinside.com/mgallery/board/lists/?id=momo)[사](https://gall.dcinside.com/board/lists/?id=sanarang)[지](https://gall.dcinside.com/mgallery/board/lists/?id=jihyo)[미](https://gall.dcinside.com/mgallery/board/lists/?id=twicemina)[다](https://gall.dcinside.com/board/lists/?id=dahyeon)[채](https://gall.dcinside.com/mgallery/board/lists/?id=sonchaeyoung)[쯔](https://gall.dcinside.com/mgallery/board/lists/?id=tzuyu0614)), 그리고 [TWICE TV 마이너 갤러리](https://gall.dcinside.com/mgallery/board/lists/?id=twicetv) 에서 이미지를 다운받는 프로그램입니다.  
@@ -39,7 +39,7 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 * 취소 버튼을 눌러 이미지 다운로드 작업을 중지합니다.
 
 # Release
-* [v1.0](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.0) - 2019/04/14  
+* [v1.0](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.0) - 2019/04/15  
 첫번째 릴리즈
 
 # License
