@@ -17,15 +17,13 @@ class Worker(QObject):
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
             'Host': 'gall.dcinside.com',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36'
         }
-
-        self._gall_id = ['twice', 'twicetv', 'nayeone', 'jungyeon', 'momo', 'sanarang', 'jihyo', 'twicemina', 'dahyeon', 'sonchaeyoung', 'tzuyu0614']
 
     # Check if the gallery is major or minor
     @pyqtSlot()
     def check_gall(self, idx):
-        res = req.get('%s%s' % (self._major_url, self._gall_id[idx]), headers=self._header)
+        res = req.get('%s%s' % (self._major_url, idx), headers=self._header)
         gallSoup = BeautifulSoup(res.text, "html.parser")
         meta_data = gallSoup.find_all("meta", {"name": "title"})
 
@@ -119,7 +117,7 @@ class Worker(QObject):
 
         self.finished.emit('다운로드 작업을 시작합니다.')
         is_major = self.check_gall(idx)
-        url = '%s%s' % ((self._major_url if is_major else self._minor_url), self._gall_id[idx])
+        url = '%s%s' % ((self._major_url if is_major else self._minor_url), idx)
 
         self.finished.emit('갤러리 체크 완료. 키워드 필터링 작업 중입니다.')
         
@@ -184,7 +182,7 @@ class Worker(QObject):
         #print('get post')
         self.finished.emit('이미지 다운로드를 시작합니다.')
         self.get_image(sprt, drtry)
-        self.finished.emit('다운로드를 완료하였습니다.')
+        self.finished.emit('다운로드 작업을 완료하였습니다.')
 
 '''
 if __name__ == '__main__':
