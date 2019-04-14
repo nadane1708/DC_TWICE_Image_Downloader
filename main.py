@@ -3,10 +3,11 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5 import uic, QtCore
 from PyQt5.QtCore import *
-from functools import partial
 import dc
+# from functools import partial
 
-form_class = uic.loadUiType("main.ui")[0]
+
+form_class = uic.loadUiType("./res/main.ui")[0]
 
 
 class MyWindow(QMainWindow, form_class, QObject):
@@ -27,9 +28,6 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.worker.moveToThread(self.worker_thread)
         self.worker_thread.start()
 
-        # Variable
-        self.gallery_idx = 0
-
         # Connecting Signals
         self._connectSignals()
 
@@ -47,7 +45,12 @@ class MyWindow(QMainWindow, form_class, QObject):
                                                     ))
         '''
 
+        # Set QCombBox Completer for Disabling Auto-Completion
+        self.completer = QCompleter(self)
+        self.selectGallery.setCompleter(self.completer)
+
         # ComboBox
+        self.selectGallery.setEditText('twice')
         self.selectGallery.currentIndexChanged.connect(self.selectionChanged)
 
         # PushButton
@@ -59,7 +62,9 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.setStatusBar(self.statusBar)
 
     def selectionChanged(self):
-        self.gallery_idx = self.selectGallery.currentIndex()
+        _gall_id = ['twice', 'twicetv', 'nayeone', 'jungyeon', 'momo', 'sanarang', 'jihyo', 'twicemina', 'dahyeon', 'sonchaeyoung', 'tzuyu0614']
+
+        self.selectGallery.setEditText(_gall_id[self.selectGallery.currentIndex()])
 
     def btn_openpath(self):
         fname = QFileDialog.getExistingDirectory(self)
@@ -81,15 +86,14 @@ class MyWindow(QMainWindow, form_class, QObject):
             self.worker_thread.start()
 
     def transmit_content(self):
-        content_list = [self.gallery_idx,
+        content_list = [self.selectGallery.currentText(),
                         self.editKeyword.text(),
                         self.editPage.text(),
                         self.onlyBy.isChecked(),
                         self.onlyRcmd.isChecked(),
                         '%s,%s' % (self.editExcept.text(), '프리뷰') if self.excptPreview.isChecked() else self.editExcept.text(),
                         self.folderSeparate.isChecked(),
-                        self.editPath.text()
-                        ]
+                        self.editPath.text()]
 
         self.main_signal.emit(content_list)
 
@@ -103,3 +107,4 @@ if __name__ == "__main__":
     myWindow = MyWindow()
     myWindow.show()
     sys.exit(app.exec_())
+    
