@@ -3,6 +3,7 @@ import requests as req
 from bs4 import BeautifulSoup
 import os
 import time
+import re
 
 
 class Worker(QObject):
@@ -76,6 +77,7 @@ class Worker(QObject):
             os.makedirs(directory)
 
         if subject:
+            subject = re.sub('[\/:*?"<>|.]', "", subject) # Remove special characters from folder name
             if not os.path.isdir('%s%s' % (directory, subject)):
                 os.makedirs('%s%s' % (directory, subject))
             with open('%s%s\\%s' % (directory, subject, filename), "wb") as file:
