@@ -45,10 +45,13 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 * [v1.01](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.01) - 2019/04/16  
 폴더명 특수문자 오류 수정
 
-* [v1.1](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.1) - 2019/04/20  
+* v1.1 - 2019/04/20  
 예외 처리 및 예외 발생 메시지 추가  
 콤보박스 목록에 스트리밍 마이너 갤러리 추가  
 마이너 버그 수정  
+
+* [v1.1a](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.1a) - 2019/04/21  
+마이너 갤러리에서 검색이 안되던 점 수정
 
 # License
 GNU General Public License v3.0
