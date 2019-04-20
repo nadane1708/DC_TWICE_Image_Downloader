@@ -29,14 +29,12 @@ class Worker(QObject):
         gallSoup = BeautifulSoup(res.text, "html.parser")
         meta_data = gallSoup.find_all("meta", {"name": "title"})
 
-        is_exist = re.findall('"(.*갤러리)"', str(meta_data))
-        if not is_exist:
-            self.finished_err.emit(['검색하신 갤러리가 존재하지 않습니다.', '갤러리 id를 확인하고 다시 시도해주시기 바랍니다.', ''])
-            return -1
-
-        # Minor gallery
-        if not meta_data:
-            return False
+        if not meta_data: # Gallery id error
+            is_exist = re.findall('갤러리 접속 에러', res.text)
+            if is_exist:
+                self.finished_err.emit(['검색하신 갤러리가 존재하지 않습니다.', '갤러리 id를 확인하고 다시 시도해주시기 바랍니다.', ''])
+                return -1
+            return False # Minor gallery
 
         # Major gallery
         return True
