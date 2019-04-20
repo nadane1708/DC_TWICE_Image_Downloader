@@ -62,7 +62,7 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.setStatusBar(self.statusBar)
 
     def selectionChanged(self):
-        _gall_id = ['twice', 'twicetv', 'nayeone', 'jungyeon', 'momo', 'sanarang', 'jihyo', 'twicemina', 'dahyeon', 'sonchaeyoung', 'tzuyu0614']
+        _gall_id = ['twice', 'twicetv', 'nayeone', 'jungyeon', 'momo', 'sanarang', 'jihyo', 'twicemina', 'dahyeon', 'sonchaeyoung', 'tzuyu0614', 'streaming']
 
         self.selectGallery.setEditText(_gall_id[self.selectGallery.currentIndex()])
 
@@ -71,8 +71,12 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.editPath.setText('%s\\' % os.path.normpath(fname)) # os.path.normpath(path) --> Change "/" to "\" on Windows OS
 
     def _connectSignals(self):
-        self.worker.finished.connect(self.updateStatusBar)
+        
         self.downloadCancel.clicked.connect(self.forceWorkerReset)
+
+        # Connect worker's pyqtSignal to pyqtSlot
+        self.worker.finished.connect(self.updateStatusBar)
+        self.worker.finished_err.connect(self.show_msgbox)
 
         # Solved parameter problem for QT connect: https://stackoverflow.com/questions/23317195/pyqt-movetothread-does-not-work-when-using-partial-for-slot
         self.main_signal.connect(self.worker.main)
@@ -100,6 +104,31 @@ class MyWindow(QMainWindow, form_class, QObject):
     @pyqtSlot(str)
     def updateStatusBar(self, signal):
         self.statusBar.showMessage(signal)
+
+    # Show error messagebox
+    @pyqtSlot(list)
+    def show_msgbox(self, err_list):
+
+        et = err_list[0]
+        er = err_list[1]
+        ex = err_list[2]
+
+        self.msgbox = QMessageBox(self)
+        self.msgbox.setIcon(QMessageBox.Information)
+        self.msgbox.setWindowTitle('Error')
+
+        if et:
+            self.msgbox.setText(et)
+            self.msgbox.setInformativeText(er)
+            self.msgbox.setStandardButtons(QMessageBox.Ok)
+        else:
+            self.msgbox.setText('예기치 못한 오류가 발생했습니다.')
+            self.msgbox.setInformativeText("자세한 정보는 아래 Show Details.. 버튼을 눌러 확인해주십시요.")
+            self.msgbox.setDetailedText(str(ex))
+            self.msgbox.setStandardButtons(QMessageBox.Ok)
+            
+        self.msgbox.show()
+        self.forceWorkerReset()
 
 
 if __name__ == "__main__":
