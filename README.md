@@ -7,7 +7,7 @@ Image Downloader for DCinside TWICE gallery.
 본 프로그램은 Python 3.6.8 & PyQt5 으로 작성되었으며, 프로그램 사용에 의해 발생하는 모든 책임은 사용자 본인에게 있습니다.
 
 # Description
-TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https://gall.dcinside.com/board/lists/?id=twice)와 멤버 갤러리([나](https://gall.dcinside.com/board/lists/?id=nayeone)[정](https://gall.dcinside.com/mgallery/board/lists/?id=jungyeon)[모](https://gall.dcinside.com/mgallery/board/lists/?id=momo)[사](https://gall.dcinside.com/board/lists/?id=sanarang)[지](https://gall.dcinside.com/mgallery/board/lists/?id=jihyo)[미](https://gall.dcinside.com/mgallery/board/lists/?id=twicemina)[다](https://gall.dcinside.com/board/lists/?id=dahyeon)[채](https://gall.dcinside.com/mgallery/board/lists/?id=sonchaeyoung)[쯔](https://gall.dcinside.com/mgallery/board/lists/?id=tzuyu0614)), 그리고 [TWICE TV 마이너 갤러리](https://gall.dcinside.com/mgallery/board/lists/?id=twicetv) 에서 이미지를 다운받는 프로그램입니다.  
+TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https://gall.dcinside.com/board/lists/?id=twice)와 멤버 갤러리([나](https://gall.dcinside.com/board/lists/?id=nayeone)[정](https://gall.dcinside.com/mgallery/board/lists/?id=jungyeon)[모](https://gall.dcinside.com/mgallery/board/lists/?id=momo)[사](https://gall.dcinside.com/board/lists/?id=sanarang)[지](https://gall.dcinside.com/mgallery/board/lists/?id=jihyo)[미](https://gall.dcinside.com/mgallery/board/lists/?id=twicemina)[다](https://gall.dcinside.com/board/lists/?id=dahyeon)[채](https://gall.dcinside.com/mgallery/board/lists/?id=sonchaeyoung)[쯔](https://gall.dcinside.com/mgallery/board/lists/?id=tzuyu0614)), [TWICE TV 마이너 갤러리](https://gall.dcinside.com/mgallery/board/lists/?id=twicetv), 그리고 [스트리밍 마이너 갤러리](https://gall.dcinside.com/mgallery/board/lists/?id=streaming) 에서 이미지를 다운받는 프로그램입니다.  
 또한 해당 갤러리의 ID를 이용하여 이미지를 검색하기 때문에 앞서 언급한 갤러리 이외의 갤러리에서도 다운로드가 가능합니다.
 
 ### 프로그램 설명
@@ -41,6 +41,14 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 # Release
 * [v1.0](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.0) - 2019/04/15  
 첫번째 릴리즈
+
+* [v1.01](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.01) - 2019/04/16  
+폴더명 특수문자 오류 수정
+
+* [v1.1](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.1) - 2019/04/20  
+예외 처리 및 예외 발생 메시지 추가
+콤보박스 목록에 스트리밍 마이너 갤러리 추가
+마이너 버그 수정
 
 # License
 GNU General Public License v3.0
