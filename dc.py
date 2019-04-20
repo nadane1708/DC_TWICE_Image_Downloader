@@ -8,6 +8,7 @@ import re
 
 class Worker(QObject):
     finished = pyqtSignal(str)
+    finished_err = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super(self.__class__, self).__init__(parent)
@@ -28,6 +29,11 @@ class Worker(QObject):
         gallSoup = BeautifulSoup(res.text, "html.parser")
         meta_data = gallSoup.find_all("meta", {"name": "title"})
 
+        is_exist = re.findall('"(.*갤러리)"', str(meta_data))
+        if not is_exist:
+            self.finished_err.emit(['검색하신 갤러리가 존재하지 않습니다.', '갤러리 id를 확인하고 다시 시도해주시기 바랍니다.', ''])
+            return -1
+
         # Minor gallery
         if not meta_data:
             return False
@@ -42,16 +48,20 @@ class Worker(QObject):
         pageSoup = BeautifulSoup(res.text, "html.parser")
         data = pageSoup.find_all("td", {"class": "gall_tit ub-word"})
 
-        for i in data:
-            data_obj = i.find("a")
-            if data_obj.find("em").get("class")[1] == 'icon_pic':
-                self._init_subject.append(data_obj.text.strip())
-                self._init_link.append(data_obj.get("href"))
-                self._init_number.append(i.parent.find("td", {"class": "gall_num"}).text)
-            elif data_obj.find("em").get("class")[1] == 'icon_recomimg':
-                self._init_subject.append(data_obj.text.strip())
-                self._init_link.append(data_obj.get("href"))
-                self._init_number.append(i.parent.find("td", {"class": "gall_num"}).text)
+        try:
+            for i in data:
+                data_obj = i.find("a")
+                if data_obj.find("em").get("class")[1] == 'icon_pic':
+                    self._init_subject.append(data_obj.text.strip())
+                    self._init_link.append(data_obj.get("href"))
+                    self._init_number.append(i.parent.find("td", {"class": "gall_num"}).text)
+                elif data_obj.find("em").get("class")[1] == 'icon_recomimg':
+                    self._init_subject.append(data_obj.text.strip())
+                    self._init_link.append(data_obj.get("href"))
+                    self._init_number.append(i.parent.find("td", {"class": "gall_num"}).text)
+        except Exception as E:
+                self.finished_err.emit(['', '', E])
+                return
 
     # Get html from gallery post & Make link and file name lists
     @pyqtSlot()
@@ -61,12 +71,16 @@ class Worker(QObject):
             postSoup = BeautifulSoup(res.text, "html.parser")
             img_data = postSoup.find("ul", {"class": "appending_file"}).find_all("a")
 
-            for j in img_data:
-                self.finished.emit('다운로드 중 (%s/%s): %s' % (i + 1, len(self._search_subject), j.text))
-                if sprt:
-                    self.download_image(j.get("href"), j.text, drtry, '[%s] %s' % (self._search_number[i], self._search_subject[i]))
-                else:
-                    self.download_image(j.get("href"), '[%s] %s' % (self._search_number[i], j.text), drtry)
+            try:
+                for j in img_data:
+                    self.finished.emit('다운로드 중 (%s/%s): %s' % (i + 1, len(self._search_subject), j.text))
+                    if sprt:
+                        self.download_image(j.get("href"), (j.text if j.text else 'null'), drtry, '[%s] %s' % (self._search_number[i], self._search_subject[i]))
+                    else:
+                        self.download_image(j.get("href"), '[%s] %s' % (self._search_number[i], (j.text if j.text else 'null')), drtry)
+            except Exception as E:
+                self.finished_err.emit(['', '', E])
+                return
 
     # Download images from posts to directory
     @pyqtSlot()
@@ -74,24 +88,36 @@ class Worker(QObject):
         # print('Download: %s' % filename)
 
         if not os.path.isdir(directory):
-            os.makedirs(directory)
+            try:
+                os.makedirs(directory)
+            except Exception as E:
+                self.finished_err.emit(['', '', E])
+                return
 
         if subject:
-            subject = re.sub('[\/:*?"<>|.]', "", subject) # Remove special characters from folder name
+            subject = re.sub("[/\\:*?\"<>|.]", "_", subject) # Remove special characters from folder name
             if not os.path.isdir('%s%s' % (directory, subject)):
                 os.makedirs('%s%s' % (directory, subject))
-            with open('%s%s\\%s' % (directory, subject, filename), "wb") as file:
-                img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._header)
-                file.write(img.content)
-                file.close()
+            try:
+                with open('%s%s\\%s' % (directory, subject, filename), "wb") as file:
+                    img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._header)
+                    file.write(img.content)
+                    file.close()
+            except Exception as E:
+                self.finished_err.emit(['', '', E])
+                return
         else:
-            with open('%s%s' % (directory, filename), "wb") as file:
-                img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._header)
-                file.write(img.content)
-                file.close()
+            try:
+                with open('%s%s' % (directory, filename), "wb") as file:
+                    img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._header)
+                    file.write(img.content)
+                    file.close()
+            except Exception as E:
+                self.finished_err.emit(['', '', E])
+                return
 
         # Sleep for avoiding traffic block; Change value as you wish.
-        time.sleep(0.3)
+        QThread.sleep(1)
         
     # Main function
     @pyqtSlot(list)
@@ -119,10 +145,18 @@ class Worker(QObject):
 
         self.finished.emit('다운로드 작업을 시작합니다.')
         is_major = self.check_gall(idx)
+        if is_major == -1:
+            return
+
         url = '%s%s' % ((self._major_url if is_major else self._minor_url), idx)
 
         self.finished.emit('갤러리 체크 완료. 키워드 필터링 작업 중입니다.')
         
+        p = re.compile("[^0-9-,]")
+        if p.search(page):
+            self.finished_err.emit(['검색하신 페이지가 존재하지 않습니다.', '페이지 입력란에 숫자(0 ~ 9) 또는 붙임표(-) 외에 문자가 포함되어 있지 않은지 확인하고 다시 시도해주시기 바랍니다.', ''])
+            return
+
         page = page.replace(" ", "") # Replace " " (space) to "" (null)
         page_number = page.split(",")
 
