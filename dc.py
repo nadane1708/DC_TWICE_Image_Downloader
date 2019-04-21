@@ -29,15 +29,26 @@ class Worker(QObject):
         gallSoup = BeautifulSoup(res.text, "html.parser")
         meta_data = gallSoup.find_all("meta", {"name": "title"})
 
-        if not meta_data: # Gallery id error
+        if not meta_data:
             is_exist = re.findall('갤러리 접속 에러', res.text)
-            if is_exist:
+            if is_exist: # Gallery id error
                 self.finished_err.emit(['검색하신 갤러리가 존재하지 않습니다.', '갤러리 id를 확인하고 다시 시도해주시기 바랍니다.', ''])
                 return -1
             return False # Minor gallery
 
         # Major gallery
         return True
+
+    # Get the last number of gallery page
+    @pyqtSlot()
+    def get_final_page(self, url, rcmd):
+        try:
+            res = req.get('%s%s' % (url, '&exception_mode=recommend'), headers=self._header)
+            pageSoup = BeautifulSoup(res.text, "html.parser")
+            self._page_end = re.search("&page=([0-9]+)", pageSoup.find("a", {"class": "page_end"}).get("href")).group(1)
+        except Exception as E:
+                self.finished_err.emit(['', '', E])
+                return
 
     # Get html from gallery page & Make link and subject lists
     @pyqtSlot()
@@ -60,6 +71,8 @@ class Worker(QObject):
         except Exception as E:
                 self.finished_err.emit(['', '', E])
                 return
+
+        self.finished.emit('갤러리 체크 완료. 키워드 필터링 작업 중입니다. (%s)' % len(self._init_subject))
 
     # Get html from gallery post & Make link and file name lists
     @pyqtSlot()
@@ -115,7 +128,7 @@ class Worker(QObject):
                 return
 
         # Sleep for avoiding traffic block; Change value as you wish.
-        QThread.sleep(1)
+        QThread.sleep(0.8)
         
     # Main function
     @pyqtSlot(list)
@@ -131,6 +144,8 @@ class Worker(QObject):
         self._except_subject = []
         self._except_link = []
         self._except_number = []
+
+        self._page_end = 0
 
         idx = list_[0]
         search = list_[1]
@@ -149,11 +164,16 @@ class Worker(QObject):
         url = '%s%s' % ((self._major_url if is_major else self._minor_url), idx)
 
         self.finished.emit('갤러리 체크 완료. 키워드 필터링 작업 중입니다.')
-        
-        p = re.compile("[^0-9-,]")
-        if p.search(page):
-            self.finished_err.emit(['검색하신 페이지가 존재하지 않습니다.', '페이지 입력란에 숫자(0 ~ 9) 또는 붙임표(-) 외에 문자가 포함되어 있지 않은지 확인하고 다시 시도해주시기 바랍니다.', ''])
-            return
+
+        self.get_final_page(url, rcmd) # Get the final page number for downloading whole pages and for additional purpose in the future
+
+        if not page: # Page input is blank; Download whole pages
+            page = '1-%s' % self._page_end
+        else: # Unexpected input like Alphabet or Hangul
+            p = re.compile("[^0-9-,]")
+            if p.search(page):
+                self.finished_err.emit(['검색하신 페이지가 존재하지 않습니다.', '페이지 입력란에 숫자(0 ~ 9) 또는 붙임표(-) 외에 문자가 포함되어 있지 않은지 확인하고 다시 시도해주시기 바랍니다.', ''])
+                return
 
         page = page.replace(" ", "") # Replace " " (space) to "" (null)
         page_number = page.split(",")
