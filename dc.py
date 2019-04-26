@@ -128,7 +128,7 @@ class Worker(QObject):
                 return
 
         # Sleep for avoiding traffic block; Change value as you wish.
-        QThread.sleep(0.8)
+        QThread.sleep(1.3)
         
     # Main function
     @pyqtSlot(list)
@@ -234,6 +234,7 @@ class Worker(QObject):
         '''
 
         #print('get post')
+        QThread.sleep(3) # Sleep for avoiding traffic block
         self.finished.emit('이미지 다운로드를 시작합니다.')
         self.get_image(sprt, drtry)
         self.finished.emit('다운로드 작업을 완료하였습니다.')
