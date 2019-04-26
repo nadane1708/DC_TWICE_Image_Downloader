@@ -51,7 +51,7 @@ class MyWindow(QMainWindow, form_class, QObject):
 
         # ComboBox
         self.selectGallery.setEditText('twice')
-        self.selectGallery.currentIndexChanged.connect(self.selectionChanged)
+        self.selectGallery.activated.connect(self.selectionChanged)
 
         # PushButton
         self.openPath.clicked.connect(self.btn_openpath)
