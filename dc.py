@@ -25,16 +25,20 @@ class Worker(QObject):
     # Check if the gallery is major or minor
     @pyqtSlot()
     def check_gall(self, idx):
-        res = req.get('%s%s' % (self._major_url, idx), headers=self._header)
-        gallSoup = BeautifulSoup(res.text, "html.parser")
-        meta_data = gallSoup.find_all("meta", {"name": "title"})
+        try:
+            res = req.get('%s%s' % (self._major_url, idx), headers=self._header)
+            gallSoup = BeautifulSoup(res.text, "html.parser")
+            meta_data = gallSoup.find_all("meta", {"name": "title"})
 
-        if not meta_data:
-            is_exist = re.findall('갤러리 접속 에러', res.text)
-            if is_exist: # Gallery id error
-                self.finished_err.emit(['검색하신 갤러리가 존재하지 않습니다.', '갤러리 id를 확인하고 다시 시도해주시기 바랍니다.', ''])
-                return -1
-            return False # Minor gallery
+            if not meta_data:
+                is_exist = re.findall('갤러리 접속 에러', res.text)
+                if is_exist: # Gallery id error
+                    self.finished_err.emit(['검색하신 갤러리가 존재하지 않습니다.', '갤러리 id를 확인하고 다시 시도해주시기 바랍니다.', ''])
+                    return -1
+                return False # Minor gallery
+        except Exception as E:
+                self.finished_err.emit(['', '', E])
+                return
 
         # Major gallery
         return True
@@ -50,24 +54,23 @@ class Worker(QObject):
                 self.finished_err.emit(['', '', E])
                 return
 
+
     # Get html from gallery page & Make link and subject lists
     @pyqtSlot()
     def get_page(self, url, page, rcmd):
-        res = req.get(('%s&page=%s%s' % (url, page, '&exception_mode=recommend') if rcmd else '%s&page=%s' % (url, page)), headers=self._header)
-        pageSoup = BeautifulSoup(res.text, "html.parser")
-        data = pageSoup.find_all("td", {"class": "gall_tit ub-word"})
-
         try:
+            res = req.get(('%s&page=%s%s' % (url, page, '&exception_mode=recommend') if rcmd else '%s&page=%s' % (url, page)), headers=self._header)
+            pageSoup = BeautifulSoup(res.text, "html.parser")
+            data = pageSoup.find_all("td", {"class": "gall_tit ub-word"})
+
             for i in data:
+                if i.parent.find("td", {"class": "gall_num"}).text == '공지':
+                    continue
+
                 data_obj = i.find("a")
-                if data_obj.find("em").get("class")[1] == 'icon_pic':
-                    self._init_subject.append(data_obj.text.strip())
-                    self._init_link.append(data_obj.get("href"))
-                    self._init_number.append(i.parent.find("td", {"class": "gall_num"}).text)
-                elif data_obj.find("em").get("class")[1] == 'icon_recomimg':
-                    self._init_subject.append(data_obj.text.strip())
-                    self._init_link.append(data_obj.get("href"))
-                    self._init_number.append(i.parent.find("td", {"class": "gall_num"}).text)
+                self._init_subject.append(data_obj.text.strip())
+                self._init_link.append(data_obj.get("href"))
+                self._init_number.append(i.parent.find("td", {"class": "gall_num"}).text)
         except Exception as E:
                 self.finished_err.emit(['', '', E])
                 return
@@ -77,21 +80,25 @@ class Worker(QObject):
     # Get html from gallery post & Make link and file name lists
     @pyqtSlot()
     def get_image(self, sprt, drtry):
-        for i in range(0, len(self._search_subject)):
-            res = req.get('https://gall.dcinside.com%s' % self._search_link[i], headers=self._header)
-            postSoup = BeautifulSoup(res.text, "html.parser")
-            img_data = postSoup.find("ul", {"class": "appending_file"}).find_all("a")
+        try:
+            for i in range(0, len(self._search_subject)):
+                res = req.get('https://gall.dcinside.com%s' % self._search_link[i], headers=self._header)
+                postSoup = BeautifulSoup(res.text, "html.parser")
 
-            try:
+                if postSoup.find("ul", {"class": "appending_file"}) is None: # The post has no images
+                    continue
+
+                img_data = postSoup.find("ul", {"class": "appending_file"}).find_all("a")
+
                 for j in img_data:
                     self.finished.emit('다운로드 중 (%s/%s): %s' % (i + 1, len(self._search_subject), j.text))
                     if sprt:
                         self.download_image(j.get("href"), (j.text if j.text else 'null'), drtry, '[%s] %s' % (self._search_number[i], self._search_subject[i]))
                     else:
                         self.download_image(j.get("href"), '[%s] %s' % (self._search_number[i], (j.text if j.text else 'null')), drtry)
-            except Exception as E:
-                self.finished_err.emit(['', '', E])
-                return
+        except Exception as E:
+            self.finished_err.emit(['', '', E])
+            return
 
     # Download images from posts to directory
     @pyqtSlot()
@@ -155,6 +162,8 @@ class Worker(QObject):
         excpt = list_[5]
         sprt = list_[6]
         drtry = list_[7]
+
+        # self.finished_err.emit(['※ 주의 사항', '한번에 너무 많은 페이지를 다운받게 되면\n트래픽 초과로 디시 서버 접속이 일시적으로\n중단되어 다운로드 작업이 중지 될 수 있습니다.\n이 점 유의 바랍니다.', ''])
 
         self.finished.emit('다운로드 작업을 시작합니다.')
         is_major = self.check_gall(idx)
