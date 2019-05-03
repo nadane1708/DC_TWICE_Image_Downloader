@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import *
 from PyQt5 import uic, QtCore
 from PyQt5.QtCore import *
 import dc
-# from functools import partial
+import configparser
 
 
 form_class = uic.loadUiType("./res/main.ui")[0]
@@ -21,6 +21,10 @@ class MyWindow(QMainWindow, form_class, QObject):
 
         self.setFixedSize(361, 256) # Fix window size
         self.setWindowFlags(QtCore.Qt.MSWindowsFixedSizeDialogHint) # Remove resizing mouse cursor
+
+        # Quit setting
+        self.quit = QAction("Quit", self)
+        self.quit.triggered.connect(self.closeEvent)
 
         # Worker Thread
         self.worker = dc.Worker()
@@ -61,6 +65,22 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.statusBar.setSizeGripEnabled(False) # Remove resizing grip of status bar
         self.setStatusBar(self.statusBar)
 
+        # Load settings from INI file
+        parser = configparser.ConfigParser()
+        if parser.read('setting.ini') == []:
+            pass
+        else:
+            self.selectGallery.setEditText(parser.get('Preset', 'gallid'))
+            self.editPage.setText(parser.get('Preset', 'page'))
+            self.editKeyword.setText(parser.get('Preset', 'keyword'))
+            self.onlyBy.setChecked(bool(int(parser.get('Preset', 'by'))))
+            self.onlyRcmd.setChecked(bool(int(parser.get('Preset', 'rcmd'))))
+            self.editExcept.setText(parser.get('Preset', 'except'))
+            self.excptPreview.setChecked(bool(int(parser.get('Preset', 'preview'))))
+            self.folderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt'))))
+            self.editPath.setText(parser.get('Preset', 'path'))
+
+
     def selectionChanged(self):
         _gall_id = ['twice', 'twicetv', 'nayeone', 'jungyeon', 'momo', 'sanarang', 'jihyo', 'twicemina', 'dahyeon', 'sonchaeyoung', 'tzuyu0614', 'streaming']
 
@@ -90,14 +110,16 @@ class MyWindow(QMainWindow, form_class, QObject):
             self.worker_thread.start()
 
     def transmit_content(self):
-        content_list = [self.selectGallery.currentText(),
-                        self.editKeyword.text(),
-                        self.editPage.text(),
-                        self.onlyBy.isChecked(),
-                        self.onlyRcmd.isChecked(),
-                        '%s,%s' % (self.editExcept.text(), '프리뷰') if self.excptPreview.isChecked() else self.editExcept.text(),
-                        self.folderSeparate.isChecked(),
-                        self.editPath.text()]
+        content_list = [
+            self.selectGallery.currentText(),
+            self.editKeyword.text(),
+            self.editPage.text(),
+            self.onlyBy.isChecked(),
+            self.onlyRcmd.isChecked(),
+            '%s,%s' % (self.editExcept.text(), '프리뷰') if self.excptPreview.isChecked() else self.editExcept.text(),
+            self.folderSeparate.isChecked(),
+            self.editPath.text()
+        ]
 
         self.main_signal.emit(content_list)
 
@@ -129,6 +151,29 @@ class MyWindow(QMainWindow, form_class, QObject):
             
         self.msgbox.show()
         self.forceWorkerReset()
+
+    def closeEvent(self, event):
+
+        # Save settings to INI file
+        config = configparser.ConfigParser()
+
+        config['Preset'] = {
+            'gallid': self.selectGallery.currentText(),
+            'keyword': self.editKeyword.text(),
+            'page': self.editPage.text(),
+            'by': int(self.onlyBy.isChecked()),
+            'rcmd': int(self.onlyRcmd.isChecked()),
+            'except': self.editExcept.text(),
+            'preview': int(self.excptPreview.isChecked()),
+            'sprt': int(self.folderSeparate.isChecked()),
+            'path': self.editPath.text()
+        }
+
+        try:
+            with open('setting.ini', "w") as f:
+                config.write(f)
+        except Exception as E:
+            self.show_msgbox(['', '', E])
 
 
 if __name__ == "__main__":
