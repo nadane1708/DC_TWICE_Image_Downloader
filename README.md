@@ -51,7 +51,15 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 마이너 버그 수정  
 
 * [v1.1a](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.1a) - 2019/04/21  
-마이너 갤러리에서 검색이 안되던 점 수정
+마이너 갤러리에서 검색이 안되던 점 수정  
+
+* [v1.2](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.2) - 2019/05/04  
+갤러리 모든 페이지 다운로드 기능 추가  
+콤보박스 목록 선택 버그 수정  
+트래픽 부하 방지 대기시간 조절  
+필터링 누락 문제 수정  
+프리셋 자동 저장/불러오기 기능 추가  
+32비트 환경 호환성 문제 해결  
 
 # License
 GNU General Public License v3.0
