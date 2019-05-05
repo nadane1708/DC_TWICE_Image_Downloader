@@ -114,6 +114,7 @@ class Worker(QObject):
 
         if subject:
             subject = re.sub("[/\\:*?\"<>|.]", "_", subject) # Remove special characters from folder name
+            subject = re.sub("\n", "_", subject) # Remove line feed character from folder name
             if not os.path.isdir('%s%s' % (directory, subject)):
                 os.makedirs('%s%s' % (directory, subject))
             try:
@@ -220,8 +221,8 @@ class Worker(QObject):
 
         # Remove elements including except keywords from lists
         # print('Remove except word')
-        except_word = excpt.split(",")        
-        for i in except_word:   
+        except_word = excpt.split(",")
+        for i in except_word:
             if i == '':
                 continue
 
