@@ -200,6 +200,7 @@ class Worker(QObject):
         search_word = search.split(",")
         if search_word:
             for i in search_word:
+                i = i.strip() # Trim whitespace
                 for j in range(0, len(self._init_subject)):
                     if i in self._init_subject[j]:
                         if by:
@@ -223,6 +224,7 @@ class Worker(QObject):
         # print('Remove except word')
         except_word = excpt.split(",")
         for i in except_word:
+            i = i.strip() # Trim whitespace
             if i == '':
                 continue
 
@@ -233,9 +235,16 @@ class Worker(QObject):
                     self._except_number.append(self._search_number[j])
 
         for i in range(0, len(self._except_subject)):
-            self._search_subject.remove(self._except_subject[i])
-            self._search_link.remove(self._except_link[i])
-            self._search_number.remove(self._except_number[i])
+            try:
+                self._search_subject.remove(self._except_subject[i])
+                self._search_link.remove(self._except_link[i])
+                self._search_number.remove(self._except_number[i])
+            except ValueError as e:
+                if str(e) == 'list.remove(x): x not in list': # Pass when that error happens. Caused by duplicated elements of self._except_subject
+                    pass
+                else:
+                    raise
+
 
         '''
         print(len(self._search_subject))
