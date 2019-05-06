@@ -66,5 +66,9 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 제외 단어 설정 오류 수정  
 제외 단어에 공백 문자가 붙는 점 수정  
 
+# Thanks to
+[트갤차트봇](https://gall.dcinside.com/board/view?id=twice&no=3939753) - Inspired by his/her program  
+[Zard](https://gallog.dcinside.com/blueaqua1019) (DC TWICE Gallery) - Beta Tester & Feedback
+
 # License
 GNU General Public License v3.0
