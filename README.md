@@ -61,5 +61,10 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 프리셋 자동 저장/불러오기 기능 추가  
 32비트 환경 호환성 문제 해결  
 
+* [v1.21](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.21) - 2019/05/07  
+오래된 글에서의 폴더명 생성 오류 수정  
+제외 단어 설정 오류 수정  
+제외 단어에 공백 문자가 붙는 점 수정  
+
 # License
 GNU General Public License v3.0
