@@ -19,7 +19,7 @@ class Worker(QObject):
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
             'Host': 'gall.dcinside.com',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36'
         }
 
     # Check if the gallery is major or minor
@@ -29,16 +29,17 @@ class Worker(QObject):
             res = req.get('%s%s' % (self._major_url, idx), headers=self._header)
             gallSoup = BeautifulSoup(res.text, "html.parser")
             meta_data = gallSoup.find_all("meta", {"name": "title"})
-
-            if not meta_data:
-                is_exist = re.findall('갤러리 접속 에러', res.text)
-                if is_exist: # Gallery id error
-                    self.finished_err.emit(['검색하신 갤러리가 존재하지 않습니다.', '갤러리 id를 확인하고 다시 시도해주시기 바랍니다.', ''])
-                    return -1
-                return False # Minor gallery
+            is_exist = re.findall('갤러리 접속 에러', res.text)
         except Exception as E:
-                self.finished_err.emit(['', '', E])
+                self.finished_err.emit(['2', E])
                 return
+
+        if is_exist: # Gallery id error
+            self.finished_err.emit(['1', '검색하신 갤러리를 확인할 수 없습니다.', '갤러리 id를 확인하고 다시 시도해주시기 바랍니다.'])
+            return -1
+
+        if not meta_data:
+            return False # Minor gallery
 
         # Major gallery
         return True
@@ -51,7 +52,7 @@ class Worker(QObject):
             pageSoup = BeautifulSoup(res.text, "html.parser")
             self._page_end = re.search("&page=([0-9]+)", pageSoup.find("a", {"class": "page_end"}).get("href")).group(1)
         except Exception as E:
-                self.finished_err.emit(['', '', E])
+                self.finished_err.emit(['2', E])
                 return
 
 
@@ -72,16 +73,17 @@ class Worker(QObject):
                 self._init_link.append(data_obj.get("href"))
                 self._init_number.append(i.parent.find("td", {"class": "gall_num"}).text)
         except Exception as E:
-                self.finished_err.emit(['', '', E])
+                self.finished_err.emit(['2', E])
                 return
 
-        self.finished.emit('갤러리 체크 완료. 키워드 필터링 작업 중입니다. (%s)' % len(self._init_subject))
+        self.finished.emit('페이지의 글을 불러옵니다. (%s)' % len(self._init_subject))
 
     # Get html from gallery post & Make link and file name lists
     @pyqtSlot()
     def get_image(self, sprt, drtry):
         try:
             for i in range(0, len(self._search_subject)):
+                subject = '[%s] %s' % (self._search_number[i], self._search_subject[i])
                 res = req.get('https://gall.dcinside.com%s' % self._search_link[i], headers=self._header)
                 postSoup = BeautifulSoup(res.text, "html.parser")
 
@@ -96,8 +98,9 @@ class Worker(QObject):
                         self.download_image(j.get("href"), (j.text if j.text else 'null'), drtry, '[%s] %s' % (self._search_number[i], self._search_subject[i]))
                     else:
                         self.download_image(j.get("href"), '[%s] %s' % (self._search_number[i], (j.text if j.text else 'null')), drtry)
+                self.finished_err.emit(['3', '0', subject, '성공'])
         except Exception as E:
-            self.finished_err.emit(['', '', E])
+            self.finished_err.emit(['3', '0', subject, '실패'])
             return
 
     # Download images from posts to directory
@@ -109,21 +112,26 @@ class Worker(QObject):
             try:
                 os.makedirs(directory)
             except Exception as E:
-                self.finished_err.emit(['', '', E])
+                self.finished_err.emit(['2', E])
                 return
 
         if subject:
             subject = re.sub("[/\\:*?\"<>|.]", "_", subject) # Remove special characters from folder name
             subject = re.sub("\n", "_", subject) # Remove line feed character from folder name
             if not os.path.isdir('%s%s' % (directory, subject)):
-                os.makedirs('%s%s' % (directory, subject))
+                try:
+                    os.makedirs('%s%s' % (directory, subject))
+                except Exception as E:
+                    self.finished_err.emit(['2', E])
+                    return
             try:
                 with open('%s%s\\%s' % (directory, subject, filename), "wb") as file:
                     img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._header)
                     file.write(img.content)
                     file.close()
+                self.finished_err.emit(['3', '1', filename, '성공'])
             except Exception as E:
-                self.finished_err.emit(['', '', E])
+                self.finished_err.emit(['3', '1', filename, '실패'])
                 return
         else:
             try:
@@ -131,8 +139,9 @@ class Worker(QObject):
                     img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._header)
                     file.write(img.content)
                     file.close()
+                self.finished_err.emit(['3', '1', filename, '성공'])
             except Exception as E:
-                self.finished_err.emit(['', '', E])
+                self.finished_err.emit(['3', '1', filename, '실패'])
                 return
 
         # Sleep for avoiding traffic block; Change value as you wish.
@@ -173,16 +182,17 @@ class Worker(QObject):
 
         url = '%s%s' % ((self._major_url if is_major else self._minor_url), idx)
 
-        self.finished.emit('갤러리 체크 완료. 키워드 필터링 작업 중입니다.')
-
         self.get_final_page(url, rcmd) # Get the final page number for downloading whole pages and for additional purpose in the future
+
+        self.finished.emit('갤러리 체크 완료. 페이지 글 불러오기 작업을 시작합니다.')
+        QThread.msleep(1000)
 
         if not page: # Page input is blank; Download whole pages
             page = '1-%s' % self._page_end
         else: # Unexpected input like Alphabet or Hangul
             p = re.compile("[^0-9-,]")
             if p.search(page):
-                self.finished_err.emit(['검색하신 페이지가 존재하지 않습니다.', '페이지 입력란에 숫자(0 ~ 9) 또는 붙임표(-) 외에 문자가 포함되어 있지 않은지 확인하고 다시 시도해주시기 바랍니다.', ''])
+                self.finished_err.emit(['1', '검색하신 페이지가 존재하지 않습니다.', '페이지 입력란에 숫자(0 ~ 9) 또는 붙임표(-) 외에 문자가 포함되어 있지 않은지 확인하고 다시 시도해주시기 바랍니다.'])
                 return
 
         page = page.replace(" ", "") # Replace " " (space) to "" (null)
@@ -194,6 +204,9 @@ class Worker(QObject):
                     self.get_page(url, j, rcmd)
             else:
                 self.get_page(url, i, rcmd)
+
+        self.finished.emit('글 불러오기 작업 완료. 키워드 필터링 작업을 시작합니다.')
+        QThread.msleep(1000)
 
         # Filter subjects including search words and "by" word
         # print('search filter')
@@ -208,17 +221,23 @@ class Worker(QObject):
                                 self._search_subject.append(self._init_subject[j])
                                 self._search_link.append(self._init_link[j])
                                 self._search_number.append(self._init_number[j])
-                        
+
+                                self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._search_subject))
+
                             continue
 
                         self._search_subject.append(self._init_subject[j])
                         self._search_link.append(self._init_link[j])
                         self._search_number.append(self._init_number[j])
+
+                        self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._search_subject))
         else:
             for j in range(0, len(self._init_subject)):
                 self._search_subject.append(self._init_subject[j])
                 self._search_link.append(self._init_link[j])
                 self._search_number.append(self._init_number[j])
+
+                self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._search_subject))
 
         # Remove elements including except keywords from lists
         # print('Remove except word')
@@ -244,7 +263,10 @@ class Worker(QObject):
                     pass
                 else:
                     raise
+            self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._search_subject))
 
+        self.finished.emit('키워드 필터링 작업을 완료했습니다. (%s)' % len(self._search_subject))
+        QThread.msleep(1000)
 
         '''
         print(len(self._search_subject))
@@ -253,8 +275,8 @@ class Worker(QObject):
         '''
 
         #print('get post')
-        QThread.msleep(3000) # Sleep for avoiding traffic block
-        self.finished.emit('이미지 다운로드를 시작합니다.')
+        self.finished.emit('다운로드 작업을 시작합니다.')
+        QThread.msleep(2000) # Sleep for avoiding traffic block
         self.get_image(sprt, drtry)
         self.finished.emit('다운로드 작업을 완료하였습니다.')
 
