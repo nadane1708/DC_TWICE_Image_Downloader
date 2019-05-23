@@ -3,13 +3,13 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5 import uic, QtCore
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 import dc
 import configparser
 
 
 form_class = uic.loadUiType("./res/main.ui")[0]
-
-
+        
 class MyWindow(QMainWindow, form_class, QObject):
     main_signal = pyqtSignal(list)
 
@@ -19,7 +19,7 @@ class MyWindow(QMainWindow, form_class, QObject):
         # UI Setting
         self.setupUi(self)
 
-        self.setFixedSize(361, 256) # Fix window size
+        self.setFixedSize(397, 256) # Fix window size
         self.setWindowFlags(QtCore.Qt.MSWindowsFixedSizeDialogHint) # Remove resizing mouse cursor
 
         # Quit setting
@@ -34,20 +34,6 @@ class MyWindow(QMainWindow, form_class, QObject):
 
         # Connecting Signals
         self._connectSignals()
-
-        '''
-        # Download Button
-        self.downloadImg.clicked.connect(partial(self.worker.main,
-                                                    self.gallery_idx,
-                                                    self.editKeyword.text(),
-                                                    self.editPage.text(),
-                                                    self.onlyBy.isChecked(),
-                                                    self.onlyRcmd.isChecked(),
-                                                    '%s,%s' % (self.editExcept.text(), '프리뷰') if self.excptPreview.isChecked() else self.editExcept.text(),
-                                                    self.folderSeparate.isChecked(),
-                                                    self.editPath.text()
-                                                    ))
-        '''
 
         # Set QCombBox Completer for Disabling Auto-Completion
         self.completer = QCompleter(self)
@@ -65,6 +51,18 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.statusBar.setSizeGripEnabled(False) # Remove resizing grip of status bar
         self.setStatusBar(self.statusBar)
 
+        # Download Status Treeview
+        self.is_expand = False
+        self.treeChild = []
+        self.treeParent = QTreeWidgetItem()
+
+        self.expandTreeview.clicked.connect(self.btn_expandTreeview)
+        self.trWidget = QTreeWidget(self.treeView)
+        self.trWidget.setColumnCount(2)
+        self.trWidget.setHeaderLabels(['글제목(파일명)', '다운 상태'])
+        self.trWidget.setColumnWidth(50, 5)
+        self.trWidget.resize(321, 221)
+
         # Load settings from INI file
         parser = configparser.ConfigParser()
         if parser.read('setting.ini') == []:
@@ -79,7 +77,6 @@ class MyWindow(QMainWindow, form_class, QObject):
             self.excptPreview.setChecked(bool(int(parser.get('Preset', 'preview'))))
             self.folderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt'))))
             self.editPath.setText(parser.get('Preset', 'path'))
-
 
     def selectionChanged(self):
         _gall_id = ['twice', 'twicetv', 'nayeone', 'jungyeon', 'momo', 'sanarang', 'jihyo', 'twicemina', 'dahyeon', 'sonchaeyoung', 'tzuyu0614', 'streaming']
@@ -96,7 +93,7 @@ class MyWindow(QMainWindow, form_class, QObject):
 
         # Connect worker's pyqtSignal to pyqtSlot
         self.worker.finished.connect(self.updateStatusBar)
-        self.worker.finished_err.connect(self.show_msgbox)
+        self.worker.finished_err.connect(self.eventHandling)
 
         # Solved parameter problem for QT connect: https://stackoverflow.com/questions/23317195/pyqt-movetothread-does-not-work-when-using-partial-for-slot
         self.main_signal.connect(self.worker.main)
@@ -123,37 +120,57 @@ class MyWindow(QMainWindow, form_class, QObject):
 
         self.main_signal.emit(content_list)
 
+    def btn_expandTreeview(self):
+        if self.is_expand: # Contract Main window size for hiding Treeview
+            self.is_expand = False
+            self.expandTreeview.setText("▶")
+            self.setFixedSize(397, 256)
+        else: # Expand Main window size for showing Treeview
+            self.is_expand = True
+            self.expandTreeview.setText("◀")
+            self.setFixedSize(726, 256)
+
     @pyqtSlot(str)
     def updateStatusBar(self, signal):
         self.statusBar.showMessage(signal)
 
-    # Show error messagebox
+    # Handle a bunch of events
     @pyqtSlot(list)
-    def show_msgbox(self, err_list):
+    def eventHandling(self, event_list):
+        if event_list[0] == '1':
+            self.msgbox = QMessageBox(self)
+            self.msgbox.setIcon(QMessageBox.Information)
+            self.msgbox.setWindowTitle('Error')
 
-        et = err_list[0]
-        er = err_list[1]
-        ex = err_list[2]
-
-        self.msgbox = QMessageBox(self)
-        self.msgbox.setIcon(QMessageBox.Information)
-        self.msgbox.setWindowTitle('Error')
-
-        if et:
-            self.msgbox.setText(et)
-            self.msgbox.setInformativeText(er)
+            self.msgbox.setText(event_list[1])
+            self.msgbox.setInformativeText(event_list[2])
             self.msgbox.setStandardButtons(QMessageBox.Ok)
-        else:
+
+            self.msgbox.show()
+            self.forceWorkerReset()
+        elif event_list[0] == '2':
+            self.msgbox = QMessageBox(self)
+            self.msgbox.setIcon(QMessageBox.Information)
+            self.msgbox.setWindowTitle('Error')
+
             self.msgbox.setText('예기치 못한 오류가 발생했습니다.')
             self.msgbox.setInformativeText("자세한 정보는 아래 Show Details.. 버튼을 눌러 확인해주십시요.")
-            self.msgbox.setDetailedText(str(ex))
+            self.msgbox.setDetailedText(str(event_list[1]))
             self.msgbox.setStandardButtons(QMessageBox.Ok)
-            
-        self.msgbox.show()
-        self.forceWorkerReset()
+
+            self.msgbox.show()
+            self.forceWorkerReset()
+        elif event_list[0] == '3': # Update Treeview datas
+            if event_list[1] == '0':
+                self.treeParent = QTreeWidgetItem([event_list[2], event_list[3]])
+                for i in self.treeChild:
+                    self.treeParent.addChild(QTreeWidgetItem(i))
+                self.trWidget.addTopLevelItem(self.treeParent)
+                self.treeChild = []
+            elif event_list[1] == '1':
+                self.treeChild.append([event_list[2], event_list[3]])
 
     def closeEvent(self, event):
-
         # Save settings to INI file
         config = configparser.ConfigParser()
 
@@ -173,7 +190,7 @@ class MyWindow(QMainWindow, form_class, QObject):
             with open('setting.ini', "w") as f:
                 config.write(f)
         except Exception as E:
-            self.show_msgbox(['', '', E])
+            self.eventHandling(['2', E])
 
 
 if __name__ == "__main__":
@@ -181,4 +198,3 @@ if __name__ == "__main__":
     myWindow = MyWindow()
     myWindow.show()
     sys.exit(app.exec_())
-    
