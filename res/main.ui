@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>361</width>
+    <width>726</width>
     <height>256</height>
    </rect>
   </property>
@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>TWICE 갤러리 짤 다운로더 v1.21</string>
+   <string>TWICE 갤러리 짤 다운로더 v1.3</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -63,7 +63,7 @@
      <bool>true</bool>
     </property>
     <property name="maxVisibleItems">
-     <number>11</number>
+     <number>12</number>
     </property>
     <item>
      <property name="text">
@@ -118,6 +118,11 @@
     <item>
      <property name="text">
       <string>쯔위 갤러리</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>스트리밍 갤러리</string>
      </property>
     </item>
    </widget>
@@ -314,7 +319,7 @@
      <rect>
       <x>25</x>
       <y>103</y>
-      <width>121</width>
+      <width>251</width>
       <height>16</height>
      </rect>
     </property>
@@ -324,8 +329,52 @@
      </font>
     </property>
     <property name="text">
-     <string>페이지 입력 예) 1, 2-10</string>
+     <string>페이지 입력 예) 1, 2-10 또는 공백일시 전체페이지</string>
     </property>
+   </widget>
+   <widget class="QCheckBox" name="wordSeparate">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>130</y>
+      <width>141</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>검색어별 폴더에 저장</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="expandTreeview">
+    <property name="geometry">
+     <rect>
+      <x>362</x>
+      <y>90</y>
+      <width>31</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>▶</string>
+    </property>
+   </widget>
+   <widget class="QTreeWidget" name="treeView">
+    <property name="geometry">
+     <rect>
+      <x>398</x>
+      <y>10</y>
+      <width>321</width>
+      <height>221</height>
+     </rect>
+    </property>
+    <column>
+     <property name="text">
+      <string notr="true">1</string>
+     </property>
+    </column>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -333,7 +382,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>361</width>
+     <width>726</width>
      <height>21</height>
     </rect>
    </property>
@@ -348,11 +397,13 @@
   <tabstop>onlyRcmd</tabstop>
   <tabstop>editExcept</tabstop>
   <tabstop>excptPreview</tabstop>
+  <tabstop>wordSeparate</tabstop>
   <tabstop>folderSeparate</tabstop>
   <tabstop>editPath</tabstop>
   <tabstop>openPath</tabstop>
   <tabstop>downloadImg</tabstop>
   <tabstop>downloadCancel</tabstop>
+  <tabstop>expandTreeview</tabstop>
  </tabstops>
  <resources/>
  <connections/>
