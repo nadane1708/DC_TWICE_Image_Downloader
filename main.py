@@ -57,11 +57,14 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.treeParent = QTreeWidgetItem()
 
         self.expandTreeview.clicked.connect(self.btn_expandTreeview)
+        self.resetTreeview.clicked.connect(self.btn_resetTreeview)
+
         self.trWidget = QTreeWidget(self.treeView)
         self.trWidget.setColumnCount(2)
-        self.trWidget.setHeaderLabels(['글제목(파일명)', '다운 상태'])
-        self.trWidget.setColumnWidth(50, 5)
-        self.trWidget.resize(321, 221)
+        self.trWidget.setHeaderLabels(['글제목(파일명)', '다운 상태', '주소'])
+        self.trWidget.setColumnWidth(0, 340)
+        self.trWidget.setColumnWidth(1, 70)
+        self.trWidget.resize(411, 511)
 
         # Load settings from INI file
         parser = configparser.ConfigParser()
@@ -99,6 +102,8 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.main_signal.connect(self.worker.main)
         self.downloadImg.clicked.connect(self.transmit_content)
 
+        self.retryDownload.clicked.connect(self.btn_retryDownload)
+
     def forceWorkerReset(self):
         if self.worker_thread.isRunning():
             self.statusBar.showMessage('다운로드를 취소하였습니다.')
@@ -128,7 +133,31 @@ class MyWindow(QMainWindow, form_class, QObject):
         else: # Expand Main window size for showing Treeview
             self.is_expand = True
             self.expandTreeview.setText("◀")
-            self.setFixedSize(726, 256)
+            self.setFixedSize(822, 577)
+
+    def btn_retryDownload(self):
+        # print('trying redownload..')
+        re_subject = []
+        tr_root = self.trWidget.invisibleRootItem()
+
+        for i in range(0, tr_root.childCount()): # Top level item
+            if not tr_root.child(i).text(1) == '':
+                re_subject.append([tr_root.child(i).text(0), tr_root.child(i).text(2)])
+            else:
+                for j in range(0, tr_root.child(i).childCount()): # Top level item's child 
+                    if not tr_root.child(i).child(j).text(1) == '성공':
+                        re_subject.append([tr_root.child(i).text(0), tr_root.child(i).text(2)])
+
+        re_list = [
+            re_subject,
+            self.folderSeparate.isChecked(),
+            self.editPath.text()
+        ]
+
+        self.main_signal.emit(re_list)
+
+    def btn_resetTreeview(self):
+        self.trWidget.clear()
 
     @pyqtSlot(str)
     def updateStatusBar(self, signal):
@@ -162,13 +191,14 @@ class MyWindow(QMainWindow, form_class, QObject):
             self.forceWorkerReset()
         elif event_list[0] == '3': # Update Treeview datas
             if event_list[1] == '0':
-                self.treeParent = QTreeWidgetItem([event_list[2], event_list[3]])
-                for i in self.treeChild:
-                    self.treeParent.addChild(QTreeWidgetItem(i))
+                self.treeParent = QTreeWidgetItem([event_list[2], event_list[3], event_list[4]])
+                if not self.treeChild == []:
+                    for i in self.treeChild:
+                        self.treeParent.addChild(QTreeWidgetItem(i))
                 self.trWidget.addTopLevelItem(self.treeParent)
                 self.treeChild = []
             elif event_list[1] == '1':
-                self.treeChild.append([event_list[2], event_list[3]])
+                self.treeChild.append([event_list[2], event_list[3], event_list[4]])
 
     def closeEvent(self, event):
         # Save settings to INI file
