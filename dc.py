@@ -4,8 +4,6 @@ from bs4 import BeautifulSoup
 import os
 import time
 import re
-from collections import OrderedDict
-from itertools import repeat
 
 
 class Worker(QObject):
@@ -70,6 +68,9 @@ class Worker(QObject):
                 if i.parent.find("td", {"class": "gall_num"}).text == '공지':
                     continue
 
+                if i.parent.find("td", {"class": "gall_num"}).text == 'AD':
+                    continue
+
                 data_obj = i.find("a")
                 self._init_subject.append(data_obj.text.strip())
                 self._init_link.append(data_obj.get("href"))
@@ -109,9 +110,9 @@ class Worker(QObject):
                         self.download_image(j.get("href"), '[%s] %s' % (self._search_number[i], (j.text if j.text else 'null')), drtry)
                 self.finished_err.emit(['3', '0', subject, '', 'https://gall.dcinside.com%s' % self._search_link[i]])
             except Exception as E:
+                print('get image \n %s' % str(E))
                 self.finished_err.emit(['3', '0', subject, '로드 실패', 'https://gall.dcinside.com%s' % self._search_link[i]])
                 QThread.msleep(1300)
-                continue
 
     # Download images from posts to directory
     @pyqtSlot()
@@ -141,6 +142,7 @@ class Worker(QObject):
                     file.close()
                 self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php')])
             except Exception as E:
+                print('download image \n %s' % str(E))
                 self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php')])
                 return
         else:
@@ -151,6 +153,7 @@ class Worker(QObject):
                     file.close()
                 self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php')])
             except Exception as E:
+                print('download image \n %s' % str(E))
                 self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php')])
                 return
 
@@ -161,22 +164,22 @@ class Worker(QObject):
     def retry_download(self, re_list):
         for i in range(0, len(re_list[0])):
             try:
-                res = req.get('%s' % re_list[0][i][1], headers=self._header)
-                postSoup = BeautifulSoup(res.text, "html.parser")
+                re_res = req.get('%s' % re_list[0][i][1], headers=self._header)
+                re_postSoup = BeautifulSoup(re_res.text, "html.parser")
 
-                if postSoup.find("meta", {"name": "description"}) is None: # The post has deleted or has been failed to load
+                if re_postSoup.find("meta", {"name": "description"}) is None: # The post has deleted or has been failed to load
                     self.finished_err.emit(['3', '0', re_list[0][i][0], '로드 실패', '%s' % re_list[0][i][1]])
                     QThread.msleep(1300)
                     continue
 
-                if postSoup.find("ul", {"class": "appending_file"}) is None: # The post has no images
+                if re_postSoup.find("ul", {"class": "appending_file"}) is None: # The post has no images
                     self.finished_err.emit(['3', '0', re_list[0][i][0], '이미지 없음', '%s' % re_list[0][i][1]])
                     QThread.msleep(1300)
                     continue
 
-                img_data = postSoup.find("ul", {"class": "appending_file"}).find_all("a")
+                re_img_data = re_postSoup.find("ul", {"class": "appending_file"}).find_all("a")
 
-                for j in img_data:
+                for j in re_img_data:
                     self.finished.emit('다운로드 중 (%s/%s): %s' % (i + 1, len(re_list[0]), j.text))
                     if re_list[1]:
                         self.download_image(j.get("href"), (j.text if j.text else 'null'), re_list[2], '%s' % re_list[0][i][0])
@@ -185,20 +188,23 @@ class Worker(QObject):
                         self.download_image(j.get("href"), '[%s] %s' % (number, (j.text if j.text else 'null')), re_list[2])
                 self.finished_err.emit(['3', '0', re_list[0][i][0], '', '%s' % re_list[0][i][1]])
             except Exception as E:
+                print(str(E))
                 self.finished_err.emit(['3', '0', re_list[0][i][0], '로드 실패', '%s' % re_list[0][i][1]])
-                continue
+                QThread.msleep(1300)
 
     # Main function
     @pyqtSlot(list)
     def main(self, list_):
+
+        if len(list_) == 3: # Retry download
+            self.retry_download(list_)
+            self.finished.emit('재다운로드 작업을 완료하였습니다.')
+            return
         
         self._init_subject = []
         self._init_link = []
         self._init_number = []
 
-        self._temp_subject = []
-        self._temp_link = []
-        self._temp_number = []
         self._search_subject = []
         self._search_link = []
         self._search_number = []
@@ -208,12 +214,7 @@ class Worker(QObject):
         self._except_number = []
 
         self._page_end = 0
-
-        if len(list_) == 3:
-            self.retry_download(list_)
-            self.finished.emit('다운로드 작업을 완료하였습니다.')
-            return
-
+            
         idx = list_[0]
         search = list_[1]
         page = list_[2]
@@ -260,39 +261,49 @@ class Worker(QObject):
 
         # Filter subjects including search words and "by" word
         # print('search filter')
-        search_word = search.split(",")
-        if search_word:
+        if search or by:
+            search_word = search.split(",")
             for i in search_word:
                 i = i.strip() # Trim whitespace
                 for j in range(0, len(self._init_subject)):
                     if i in self._init_subject[j]:
                         if by:
                             if 'by' in self._init_subject[j]:
-                                self._temp_subject.append(self._init_subject[j])
-                                self._temp_link.append(self._init_link[j])
-                                self._temp_number.append(self._init_number[j])
+                                self._search_subject.append(self._init_subject[j])
+                                self._search_link.append(self._init_link[j])
+                                self._search_number.append(self._init_number[j])
 
-                                self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._temp_subject))
+                                self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._search_subject))
 
                             continue
 
-                        self._temp_subject.append(self._init_subject[j])
-                        self._temp_link.append(self._init_link[j])
-                        self._temp_number.append(self._init_number[j])
+                        self._search_subject.append(self._init_subject[j])
+                        self._search_link.append(self._init_link[j])
+                        self._search_number.append(self._init_number[j])
 
-                        self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._temp_subject))
+                        self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._search_subject))
         else:
             for j in range(0, len(self._init_subject)):
-                self._temp_subject.append(self._init_subject[j])
-                self._temp_link.append(self._init_link[j])
-                self._temp_number.append(self._init_number[j])
+                self._search_subject.append(self._init_subject[j])
+                self._search_link.append(self._init_link[j])
+                self._search_number.append(self._init_number[j])
 
-                self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._temp_subject))
+                self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._search_subject))
 
         # Remove duplicates from filtered lists
-        self._search_subject = list(OrderedDict(zip(self._temp_subject, repeat(None))))
-        self._search_link = list(OrderedDict(zip(self._temp_link, repeat(None))))
-        self._search_number = list(OrderedDict(zip(self._temp_number, repeat(None))))
+        try:
+            for i in range(0, len(self._search_number)):
+                dupl_list = [ j for j, x in enumerate( self._search_number ) if x == self._search_number[i] ]
+                dupl_list.pop(0)
+                for j in range(0, len(dupl_list)):
+                    self._search_number.pop(dupl_list[j] - j)
+                    self._search_subject.pop(dupl_list[j] - j)
+                    self._search_link.pop(dupl_list[j] - j)
+        except Exception as e:
+            if str(e) == 'list index out of range':
+                pass
+            else:
+                raise
 
         # Remove elements including except keywords from lists
         # print('Remove except word')
