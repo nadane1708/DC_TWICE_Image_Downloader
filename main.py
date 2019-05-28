@@ -122,7 +122,7 @@ class MyWindow(QMainWindow, form_class, QObject):
             self.folderSeparate.isChecked(),
             self.editPath.text()
         ]
-
+        
         self.main_signal.emit(content_list)
 
     def btn_expandTreeview(self):
@@ -137,9 +137,9 @@ class MyWindow(QMainWindow, form_class, QObject):
 
     def btn_retryDownload(self):
         # print('trying redownload..')
+        self.forceWorkerReset()
         re_subject = []
         tr_root = self.trWidget.invisibleRootItem()
-        self.forceWorkerReset()
         self.statusBar.showMessage('재다운로드를 시작합니다.')
 
         for i in range(0, tr_root.childCount()): # Top level item
@@ -159,7 +159,9 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.main_signal.emit(re_list)
 
     def btn_resetTreeview(self):
+        self.forceWorkerReset()
         self.trWidget.clear()
+        self.statusBar.showMessage('다운 목록을 모두 삭제했습니다.')
 
     @pyqtSlot(str)
     def updateStatusBar(self, signal):
