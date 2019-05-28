@@ -139,6 +139,8 @@ class MyWindow(QMainWindow, form_class, QObject):
         # print('trying redownload..')
         re_subject = []
         tr_root = self.trWidget.invisibleRootItem()
+        self.forceWorkerReset()
+        self.statusBar.showMessage('재다운로드를 시작합니다.')
 
         for i in range(0, tr_root.childCount()): # Top level item
             if not tr_root.child(i).text(1) == '':
@@ -227,4 +229,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     myWindow = MyWindow()
     myWindow.show()
-    sys.exit(app.exec_())
+    app.exec_()
+    print('terminate normally')
+    sys.exit()
