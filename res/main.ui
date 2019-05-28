@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>726</width>
-    <height>256</height>
+    <width>822</width>
+    <height>577</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -332,22 +332,6 @@
      <string>페이지 입력 예) 1, 2-10 또는 공백일시 전체페이지</string>
     </property>
    </widget>
-   <widget class="QCheckBox" name="wordSeparate">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>90</x>
-      <y>130</y>
-      <width>141</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>검색어별 폴더에 저장</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="expandTreeview">
     <property name="geometry">
      <rect>
@@ -366,8 +350,8 @@
      <rect>
       <x>398</x>
       <y>10</y>
-      <width>321</width>
-      <height>221</height>
+      <width>411</width>
+      <height>511</height>
      </rect>
     </property>
     <column>
@@ -376,13 +360,39 @@
      </property>
     </column>
    </widget>
+   <widget class="QPushButton" name="retryDownload">
+    <property name="geometry">
+     <rect>
+      <x>640</x>
+      <y>528</y>
+      <width>80</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>재다운로드</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="resetTreeview">
+    <property name="geometry">
+     <rect>
+      <x>730</x>
+      <y>528</y>
+      <width>80</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>목록 초기화</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>726</width>
+     <width>822</width>
      <height>21</height>
     </rect>
    </property>
@@ -397,7 +407,6 @@
   <tabstop>onlyRcmd</tabstop>
   <tabstop>editExcept</tabstop>
   <tabstop>excptPreview</tabstop>
-  <tabstop>wordSeparate</tabstop>
   <tabstop>folderSeparate</tabstop>
   <tabstop>editPath</tabstop>
   <tabstop>openPath</tabstop>
