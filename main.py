@@ -57,6 +57,7 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.treeParent = QTreeWidgetItem()
 
         self.expandTreeview.clicked.connect(self.btn_expandTreeview)
+        self.tr_selectDel.clicked.connect(self.btn_trSelectDel)
         self.resetTreeview.clicked.connect(self.btn_resetTreeview)
 
         self.trWidget = QTreeWidget(self.treeView)
@@ -65,6 +66,7 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.trWidget.setColumnWidth(0, 340)
         self.trWidget.setColumnWidth(1, 70)
         self.trWidget.resize(411, 511)
+        self.trWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         # Load settings from INI file
         parser = configparser.ConfigParser()
@@ -149,6 +151,7 @@ class MyWindow(QMainWindow, form_class, QObject):
                 for j in range(0, tr_root.child(i).childCount()): # Top level item's child 
                     if not tr_root.child(i).child(j).text(1) == '성공':
                         re_subject.append([tr_root.child(i).text(0), tr_root.child(i).text(2)])
+                        break
 
         re_list = [
             re_subject,
@@ -157,6 +160,11 @@ class MyWindow(QMainWindow, form_class, QObject):
         ]
 
         self.main_signal.emit(re_list)
+
+    def btn_trSelectDel(self):
+        tr_root = self.trWidget.invisibleRootItem()
+        for i in self.trWidget.selectedItems():
+            tr_root.removeChild(i)
 
     def btn_resetTreeview(self):
         self.forceWorkerReset()
