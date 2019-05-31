@@ -38,6 +38,18 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 #### 취소  
 * 취소 버튼을 눌러 이미지 다운로드 작업을 중지합니다.
 
+#### 다운로드 트리뷰 위젯  
+* 다운로드 진행상황 표시 트리뷰 위젯입니다. 게시물의 이미지 다운로드 실패나 게시물 내용 로딩 실패 등이 표시됩니다.
+
+#### 재다운로드  
+* 재다운로드 버튼을 눌러 다운로드를 실패한 목록의 이미지 재다운로드 작업을 시작합니다.
+
+#### 선택 삭제  
+* 트리뷰 위젯에서 복수 선택한 목록을 삭제합니다.
+
+#### 목록 초기화  
+* 트리뷰 위젯의 모든 목록을 삭제합니다.
+
 # Release
 * [v1.0](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.0) - 2019/04/15  
 첫번째 릴리즈
@@ -66,9 +78,16 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 제외 단어 설정 오류 수정  
 제외 단어에 공백 문자가 붙는 점 수정  
 
+* [v1.3](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.3) - 2019/05/30  
+다운로드 진행 상황 트리뷰 위젯 추가  
+예외 처리 코드 수정  
+필터링 중복 실행 버그 수정  
+재다운로드, 선택 삭제, 목록 초기화 버튼 추가  
+
 # Thanks to
 [트갤차트봇](https://gall.dcinside.com/board/view?id=twice&no=3939753) - Inspired by his/her program  
-[Zard](https://gallog.dcinside.com/blueaqua1019) (DC TWICE Gallery) - Beta Tester & Feedback
+[Zard](https://gallog.dcinside.com/blueaqua1019) (DC TWICE Gallery) - Beta Tester & Feedback  
+[별*](https://gallog.dcinside.com/acalffkstlqkf) (DC TWICE Gallery) - Feedback
 
 # License
 GNU General Public License v3.0
