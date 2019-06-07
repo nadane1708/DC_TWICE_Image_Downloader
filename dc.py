@@ -31,8 +31,8 @@ class Worker(QObject):
             meta_data = gallSoup.find_all("meta", {"name": "title"})
             is_exist = re.findall('갤러리 접속 에러', res.text)
         except Exception as E:
-                self.finished_err.emit(['2', E])
-                return
+            self.finished_err.emit(['2', E])
+            return
 
         if is_exist: # Gallery id error
             self.finished_err.emit(['1', '검색하신 갤러리를 확인할 수 없습니다.', '갤러리 id를 확인하고 다시 시도해주시기 바랍니다.'])
@@ -48,12 +48,12 @@ class Worker(QObject):
     @pyqtSlot()
     def get_final_page(self, url, rcmd):
         try:
-            res = req.get('%s%s' % (url, '&exception_mode=recommend'), headers=self._header)
+            res = req.get('%s%s' % (url, '&exception_mode=recommend') if rcmd else '%s' % url, headers=self._header)
             pageSoup = BeautifulSoup(res.text, "html.parser")
             self._page_end = re.search("&page=([0-9]+)", pageSoup.find("a", {"class": "page_end"}).get("href")).group(1)
         except Exception as E:
-                self.finished_err.emit(['2', E])
-                return
+            self.finished_err.emit(['2', E])
+            return
 
 
     # Get html from gallery page & Make link and subject lists
@@ -67,8 +67,11 @@ class Worker(QObject):
             for i in data:
                 if i.parent.find("td", {"class": "gall_num"}).text == '공지':
                     continue
-
-                if i.parent.find("td", {"class": "gall_num"}).text == 'AD':
+                elif i.parent.find("td", {"class": "gall_num"}).text == 'AD':
+                    continue
+                elif i.parent.find("td", {"class": "gall_num"}).text == '설문':
+                    continue
+                elif i.parent.find("td", {"class": "gall_num"}).text == '이슈':
                     continue
 
                 data_obj = i.find("a")
@@ -76,8 +79,8 @@ class Worker(QObject):
                 self._init_link.append(data_obj.get("href"))
                 self._init_number.append(i.parent.find("td", {"class": "gall_num"}).text)
         except Exception as E:
-                self.finished_err.emit(['2', E])
-                return
+            self.finished_err.emit(['2', E])
+            return
 
         self.finished.emit('페이지의 글을 불러옵니다. (%s)' % len(self._init_subject))
 
@@ -160,46 +163,9 @@ class Worker(QObject):
         # Sleep for avoiding traffic block; Change value as you wish.
         QThread.msleep(1300)
 
-    @pyqtSlot()
-    def retry_download(self, re_list):
-        for i in range(0, len(re_list[0])):
-            try:
-                re_res = req.get('%s' % re_list[0][i][1], headers=self._header)
-                re_postSoup = BeautifulSoup(re_res.text, "html.parser")
-
-                if re_postSoup.find("meta", {"name": "description"}) is None: # The post has deleted or has been failed to load
-                    self.finished_err.emit(['3', '0', re_list[0][i][0], '로드 실패', '%s' % re_list[0][i][1]])
-                    QThread.msleep(1300)
-                    continue
-
-                if re_postSoup.find("ul", {"class": "appending_file"}) is None: # The post has no images
-                    self.finished_err.emit(['3', '0', re_list[0][i][0], '이미지 없음', '%s' % re_list[0][i][1]])
-                    QThread.msleep(1300)
-                    continue
-
-                re_img_data = re_postSoup.find("ul", {"class": "appending_file"}).find_all("a")
-
-                for j in re_img_data:
-                    self.finished.emit('다운로드 중 (%s/%s): %s' % (i + 1, len(re_list[0]), j.text))
-                    if re_list[1]:
-                        self.download_image(j.get("href"), (j.text if j.text else 'null'), re_list[2], '%s' % re_list[0][i][0])
-                    else:
-                        number = re.match("\[(\d+)\]", re_list[0][i][0]).group()
-                        self.download_image(j.get("href"), '[%s] %s' % (number, (j.text if j.text else 'null')), re_list[2])
-                self.finished_err.emit(['3', '0', re_list[0][i][0], '', '%s' % re_list[0][i][1]])
-            except Exception as E:
-                print(str(E))
-                self.finished_err.emit(['3', '0', re_list[0][i][0], '로드 실패', '%s' % re_list[0][i][1]])
-                QThread.msleep(1300)
-
     # Main function
     @pyqtSlot(list)
     def main(self, list_):
-
-        if len(list_) == 3: # Retry download
-            self.retry_download(list_)
-            self.finished.emit('재다운로드 작업을 완료하였습니다.')
-            return
         
         self._init_subject = []
         self._init_link = []
@@ -346,8 +312,100 @@ class Worker(QObject):
         self.get_image(sprt, drtry)
         self.finished.emit('다운로드 작업을 완료하였습니다.')
 
-'''
-if __name__ == '__main__':
-    session = dc()
-    session.main(2, 'gif','20 - 30', 1, 1, '', 0, 'C:\\Users\\Sean\\Desktop\\TWICE 이미지 다운로더\\test\\')
-'''
+class retryWorker(QObject):
+    finished = pyqtSignal(str)
+    finished_err = pyqtSignal(list)
+    
+    def __init__(self, parent=None):
+        super(self.__class__, self).__init__(parent)
+
+        self._header = {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Host': 'gall.dcinside.com',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
+        }
+
+    @pyqtSlot()
+    def download_image(self, url, filename, directory, subject=''):
+        if not os.path.isdir(directory):
+            try:
+                os.makedirs(directory)
+            except Exception as E:
+                self.finished_err.emit(['2', E])
+                return
+
+        if subject:
+            subject = re.sub("[/\\:*?\"<>|.]", "_", subject) # Remove special characters from folder name
+            subject = re.sub("\n", "_", subject) # Remove line feed character from folder name
+            if not os.path.isdir('%s%s' % (directory, subject)):
+                try:
+                    os.makedirs('%s%s' % (directory, subject))
+                except Exception as E:
+                    self.finished_err.emit(['2', E])
+                    return
+            try:
+                with open('%s%s\\%s' % (directory, subject, filename), "wb") as file:
+                    img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._header)
+                    file.write(img.content)
+                    file.close()
+                self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php')])
+            except Exception as E:
+                print('download image \n %s' % str(E))
+                self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php')])
+                return
+        else:
+            try:
+                with open('%s%s' % (directory, filename), "wb") as file:
+                    img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._header)
+                    file.write(img.content)
+                    file.close()
+                self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php')])
+            except Exception as E:
+                print('download image \n %s' % str(E))
+                self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php')])
+                return
+
+        # Sleep for avoiding traffic block; Change value as you wish.
+        QThread.msleep(1300)
+
+    @pyqtSlot()
+    def retry_download(self, re_list):
+        for i in range(0, len(re_list[0])):
+            try:
+                re_res = req.get('%s' % re_list[0][i][1], headers=self._header)
+                re_postSoup = BeautifulSoup(re_res.text, "html.parser")
+
+                if re_postSoup.find("meta", {"name": "description"}) is None: # The post has deleted or has been failed to load
+                    self.finished_err.emit(['3', '0', re_list[0][i][0], '로드 실패', '%s' % re_list[0][i][1]])
+                    QThread.msleep(1300)
+                    continue
+
+                if re_postSoup.find("ul", {"class": "appending_file"}) is None: # The post has no images
+                    self.finished_err.emit(['3', '0', re_list[0][i][0], '이미지 없음', '%s' % re_list[0][i][1]])
+                    QThread.msleep(1300)
+                    continue
+
+                re_img_data = re_postSoup.find("ul", {"class": "appending_file"}).find_all("a")
+
+                for j in re_img_data:
+                    self.finished.emit('다운로드 중 (%s/%s): %s' % (i + 1, len(re_list[0]), j.text))
+                    if re_list[1]:
+                        self.download_image(j.get("href"), (j.text if j.text else 'null'), re_list[2], '%s' % re_list[0][i][0])
+                    else:
+                        number = re.match("\[(\d+)\]", re_list[0][i][0]).group()
+                        self.download_image(j.get("href"), '[%s] %s' % (number, (j.text if j.text else 'null')), re_list[2])
+                self.finished_err.emit(['3', '0', re_list[0][i][0], '', '%s' % re_list[0][i][1]])
+            except Exception as E:
+                print(str(E))
+                self.finished_err.emit(['3', '0', re_list[0][i][0], '로드 실패', '%s' % re_list[0][i][1]])
+                QThread.msleep(1300)
+
+        self.finished.emit('재다운로드 작업을 완료하였습니다.')
+
+    @pyqtSlot(list)
+    def main(self, _list):
+        self.finished.emit('재다운로드 작업을 시작합니다.')
+        QThread.msleep(2000)
+        self.retry_download(_list)
+        self.finished.emit('재다운로드 작업을 완료하였습니다.')
