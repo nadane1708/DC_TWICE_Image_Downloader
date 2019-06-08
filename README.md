@@ -50,6 +50,9 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 #### 목록 초기화  
 * 트리뷰 위젯의 모든 목록을 삭제합니다.
 
+#### 다운로드 할 주소  
+이미지를 다운로드 받을 네이버 포스트나 티스토리 주소를 한 줄에 한 개씩 적습니다.
+
 # Release
 * [v1.0](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.0) - 2019/04/15  
 첫번째 릴리즈
@@ -83,6 +86,16 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 예외 처리 코드 수정  
 필터링 중복 실행 버그 수정  
 재다운로드, 선택 삭제, 목록 초기화 버튼 추가  
+
+* [v1.4](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.4) - 2019/06/09  
+네이버 포스트, 티스토리 원본 저장 기능 추가  
+재다운로드 강제 종료 버그 수정  
+디시 갤러리 페이지 분석 버그 수정  
+파일 저장 관련 코드 안정화  
+
+# Contact
+본 TWICE 갤러리 짤 다운로더와 관련 문의사항은 아래 오픈카톡 주소로 연락바랍니다.  
+https://open.kakao.com/o/sfmnlrpb  
 
 # Thanks to
 [트갤차트봇](https://gall.dcinside.com/board/view?id=twice&no=3939753) - Inspired by his/her program  
