@@ -5,6 +5,7 @@ from PyQt5 import uic, QtCore
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import dc
+import nati
 import configparser
 
 
@@ -12,6 +13,8 @@ form_class = uic.loadUiType("./res/main.ui")[0]
         
 class MyWindow(QMainWindow, form_class, QObject):
     main_signal = pyqtSignal(list)
+    re_main_signal = pyqtSignal(list)
+    nati_main_signal = pyqtSignal(list)
 
     def __init__(self):
         super().__init__()
@@ -19,7 +22,7 @@ class MyWindow(QMainWindow, form_class, QObject):
         # UI Setting
         self.setupUi(self)
 
-        self.setFixedSize(397, 256) # Fix window size
+        self.setFixedSize(397, 281) # Fix window size
         self.setWindowFlags(QtCore.Qt.MSWindowsFixedSizeDialogHint) # Remove resizing mouse cursor
 
         # Quit setting
@@ -30,7 +33,17 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.worker = dc.Worker()
         self.worker_thread = QThread()
         self.worker.moveToThread(self.worker_thread)
-        self.worker_thread.start()
+
+        self.reworker = dc.retryWorker()
+        self.reworker_thread = QThread()
+        self.reworker.moveToThread(self.reworker_thread)
+
+        self.natiworker = nati.Worker()
+        self.natiworker_thread = QThread()
+        self.natiworker.moveToThread(self.natiworker_thread)
+
+        # Tab
+        self.tabWidget.currentChanged.connect(self.tabIndexChanged)
 
         # Connecting Signals
         self._connectSignals()
@@ -45,6 +58,8 @@ class MyWindow(QMainWindow, form_class, QObject):
 
         # PushButton
         self.openPath.clicked.connect(self.btn_openpath)
+
+        self.openPath_2.clicked.connect(self.btn_openpath_2)
 
         # StatusBar
         self.statusBar = QStatusBar(self)
@@ -68,20 +83,47 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.trWidget.resize(411, 511)
         self.trWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
+        self.treeChild_2 = []
+        self.treeParent_2 = QTreeWidgetItem()
+
+        self.tr_selectDel_2.clicked.connect(self.btn_trSelectDel_2)
+        self.resetTreeview_2.clicked.connect(self.btn_resetTreeview_2)
+
+        self.trWidget_2 = QTreeWidget(self.treeView_2)
+        self.trWidget_2.setColumnCount(2)
+        self.trWidget_2.setHeaderLabels(['글제목(파일명)', '다운 상태', '주소'])
+        self.trWidget_2.setColumnWidth(0, 340)
+        self.trWidget_2.setColumnWidth(1, 70)
+        self.trWidget_2.resize(411, 511)
+        self.trWidget_2.setSelectionMode(QAbstractItemView.ExtendedSelection)
+
         # Load settings from INI file
         parser = configparser.ConfigParser()
         if parser.read('setting.ini') == []:
             pass
         else:
-            self.selectGallery.setEditText(parser.get('Preset', 'gallid'))
-            self.editPage.setText(parser.get('Preset', 'page'))
-            self.editKeyword.setText(parser.get('Preset', 'keyword'))
-            self.onlyBy.setChecked(bool(int(parser.get('Preset', 'by'))))
-            self.onlyRcmd.setChecked(bool(int(parser.get('Preset', 'rcmd'))))
-            self.editExcept.setText(parser.get('Preset', 'except'))
-            self.excptPreview.setChecked(bool(int(parser.get('Preset', 'preview'))))
-            self.folderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt'))))
-            self.editPath.setText(parser.get('Preset', 'path'))
+            try:
+                self.selectGallery.setEditText(parser.get('Preset', 'gallid'))
+                self.editPage.setText(parser.get('Preset', 'page'))
+                self.editKeyword.setText(parser.get('Preset', 'keyword'))
+                self.onlyBy.setChecked(bool(int(parser.get('Preset', 'by'))))
+                self.onlyRcmd.setChecked(bool(int(parser.get('Preset', 'rcmd'))))
+                self.editExcept.setText(parser.get('Preset', 'except'))
+                self.excptPreview.setChecked(bool(int(parser.get('Preset', 'preview'))))
+                self.folderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt'))))
+                self.editPath.setText(parser.get('Preset', 'path'))
+
+                self.folderSeparate_2.setChecked(bool(int(parser.get('Preset', 'sprt_2'))))
+                self.editPath_2.setText(parser.get('Preset', 'path_2'))
+            except Exception as E:
+                self.eventHandling(['2', E])
+
+
+    def tabIndexChanged(self):
+        if self.tabWidget.currentIndex() == 1: # Tab index is changed to 1 (네이버 포스트/티스토리 탭)
+            self.is_expand = True
+            self.expandTreeview.setText("◀")
+            self.setFixedSize(822, 602)
 
     def selectionChanged(self):
         _gall_id = ['twice', 'twicetv', 'nayeone', 'jungyeon', 'momo', 'sanarang', 'jihyo', 'twicemina', 'dahyeon', 'sonchaeyoung', 'tzuyu0614', 'streaming']
@@ -92,28 +134,62 @@ class MyWindow(QMainWindow, form_class, QObject):
         fname = QFileDialog.getExistingDirectory(self)
         self.editPath.setText('%s\\' % os.path.normpath(fname)) # os.path.normpath(path) --> Change "/" to "\" on Windows OS
 
+    def btn_openpath_2(self):
+        fname = QFileDialog.getExistingDirectory(self)
+        self.editPath_2.setText('%s\\' % os.path.normpath(fname)) # os.path.normpath(path) --> Change "/" to "\" on Windows OS
+
     def _connectSignals(self):
         
         self.downloadCancel.clicked.connect(self.forceWorkerReset)
+        self.downloadCancel_2.clicked.connect(self.forceWorkerReset)
 
         # Connect worker's pyqtSignal to pyqtSlot
         self.worker.finished.connect(self.updateStatusBar)
         self.worker.finished_err.connect(self.eventHandling)
 
+        self.reworker.finished.connect(self.updateStatusBar)
+        self.reworker.finished_err.connect(self.eventHandling)
+
+        self.natiworker.finished.connect(self.updateStatusBar)
+        self.natiworker.finished_err.connect(self.eventHandling)
+
         # Solved parameter problem for QT connect: https://stackoverflow.com/questions/23317195/pyqt-movetothread-does-not-work-when-using-partial-for-slot
         self.main_signal.connect(self.worker.main)
         self.downloadImg.clicked.connect(self.transmit_content)
 
+        self.re_main_signal.connect(self.reworker.main)
         self.retryDownload.clicked.connect(self.btn_retryDownload)
 
-    def forceWorkerReset(self):
+        self.nati_main_signal.connect(self.natiworker.main)
+        self.downloadImg_2.clicked.connect(self.btn_downloadImg_2)
+
+    def forceWorkerReset(self, var=False):
+        status = True
+        if var:
+            status = False
+
         if self.worker_thread.isRunning():
-            self.statusBar.showMessage('다운로드를 취소하였습니다.')
+            if status:
+                self.statusBar.showMessage('다운로드를 취소하였습니다.')
             self.worker_thread.terminate()
             self.worker_thread.wait()
-            self.worker_thread.start()
+
+        if self.reworker_thread.isRunning():
+            if status:
+                self.statusBar.showMessage('재다운로드를 취소하였습니다.')
+            self.reworker_thread.terminate()
+            self.reworker_thread.wait()
+
+        if self.natiworker_thread.isRunning():
+            if status:
+                self.statusBar.showMessage('다운로드를 취소하였습니다.')
+            self.natiworker_thread.terminate()
+            self.natiworker_thread.wait()
 
     def transmit_content(self):
+        self.forceWorkerReset(True)
+        self.worker_thread.start()
+
         content_list = [
             self.selectGallery.currentText(),
             self.editKeyword.text(),
@@ -127,22 +203,13 @@ class MyWindow(QMainWindow, form_class, QObject):
         
         self.main_signal.emit(content_list)
 
-    def btn_expandTreeview(self):
-        if self.is_expand: # Contract Main window size for hiding Treeview
-            self.is_expand = False
-            self.expandTreeview.setText("▶")
-            self.setFixedSize(397, 256)
-        else: # Expand Main window size for showing Treeview
-            self.is_expand = True
-            self.expandTreeview.setText("◀")
-            self.setFixedSize(822, 577)
-
     def btn_retryDownload(self):
         # print('trying redownload..')
-        self.forceWorkerReset()
+        self.forceWorkerReset(True)
+        self.reworker_thread.start()
+
         re_subject = []
         tr_root = self.trWidget.invisibleRootItem()
-        self.statusBar.showMessage('재다운로드를 시작합니다.')
 
         for i in range(0, tr_root.childCount()): # Top level item
             if not tr_root.child(i).text(1) == '':
@@ -159,7 +226,29 @@ class MyWindow(QMainWindow, form_class, QObject):
             self.editPath.text()
         ]
 
-        self.main_signal.emit(re_list)
+        self.re_main_signal.emit(re_list)
+
+    def btn_downloadImg_2(self):
+        self.forceWorkerReset(True)
+        self.natiworker_thread.start()
+
+        nati_list = [
+            self.nati_url.toPlainText(),
+            self.folderSeparate_2.isChecked(),
+            self.editPath_2.text()
+        ]
+
+        self.nati_main_signal.emit(nati_list)
+
+    def btn_expandTreeview(self):
+        if self.is_expand: # Contract Main window size for hiding Treeview
+            self.is_expand = False
+            self.expandTreeview.setText("▶")
+            self.setFixedSize(397, 281)
+        else: # Expand Main window size for showing Treeview
+            self.is_expand = True
+            self.expandTreeview.setText("◀")
+            self.setFixedSize(822, 602)
 
     def btn_trSelectDel(self):
         tr_root = self.trWidget.invisibleRootItem()
@@ -167,13 +256,25 @@ class MyWindow(QMainWindow, form_class, QObject):
             tr_root.removeChild(i)
 
     def btn_resetTreeview(self):
-        self.forceWorkerReset()
+        self.forceWorkerReset(True)
         self.trWidget.clear()
+        self.statusBar.showMessage('다운 목록을 모두 삭제했습니다.')
+
+    def btn_trSelectDel_2(self):
+        tr_root = self.trWidget_2.invisibleRootItem()
+        for i in self.trWidget_2.selectedItems():
+            tr_root.removeChild(i)
+
+    def btn_resetTreeview_2(self):
+        self.forceWorkerReset(True)
+        self.trWidget_2.clear()
         self.statusBar.showMessage('다운 목록을 모두 삭제했습니다.')
 
     @pyqtSlot(str)
     def updateStatusBar(self, signal):
         self.statusBar.showMessage(signal)
+        if '다운로드 작업을 완료하였습니다.' in signal:
+            self.forceWorkerReset(True)
 
     # Handle a bunch of events
     @pyqtSlot(list)
@@ -211,6 +312,16 @@ class MyWindow(QMainWindow, form_class, QObject):
                 self.treeChild = []
             elif event_list[1] == '1':
                 self.treeChild.append([event_list[2], event_list[3], event_list[4]])
+        elif event_list[0] == '4': # Update Treeview datas for naver post/tistory download
+            if event_list[1] == '0':
+                self.treeParent_2 = QTreeWidgetItem([event_list[2], event_list[3], event_list[4]])
+                if not self.treeChild_2 == []:
+                    for i in self.treeChild_2:
+                        self.treeParent_2.addChild(QTreeWidgetItem(i))
+                self.trWidget_2.addTopLevelItem(self.treeParent_2)
+                self.treeChild_2 = []
+            elif event_list[1] == '1':
+                self.treeChild_2.append([event_list[2], event_list[3], event_list[4]])
 
     def closeEvent(self, event):
         # Save settings to INI file
@@ -225,7 +336,9 @@ class MyWindow(QMainWindow, form_class, QObject):
             'except': self.editExcept.text(),
             'preview': int(self.excptPreview.isChecked()),
             'sprt': int(self.folderSeparate.isChecked()),
-            'path': self.editPath.text()
+            'path': self.editPath.text(),
+            'sprt_2': int(self.folderSeparate_2.isChecked()),
+            'path_2': self.editPath_2.text(),
         }
 
         try:
