@@ -145,6 +145,7 @@ class Worker(QObject):
                     file.close()
                 self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php')])
             except Exception as E:
+                file.close()
                 print('download image \n %s' % str(E))
                 self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php')])
                 return
@@ -156,6 +157,7 @@ class Worker(QObject):
                     file.close()
                 self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php')])
             except Exception as E:
+                file.close()
                 print('download image \n %s' % str(E))
                 self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php')])
                 return
@@ -351,6 +353,7 @@ class retryWorker(QObject):
                     file.close()
                 self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php')])
             except Exception as E:
+                file.close()
                 print('download image \n %s' % str(E))
                 self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php')])
                 return
@@ -362,6 +365,7 @@ class retryWorker(QObject):
                     file.close()
                 self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php')])
             except Exception as E:
+                file.close()
                 print('download image \n %s' % str(E))
                 self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php')])
                 return
