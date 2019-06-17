@@ -93,6 +93,10 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 디시 갤러리 페이지 분석 버그 수정  
 파일 저장 관련 코드 안정화  
 
+* [v1.41](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.41) - 2019/06/17  
+톱스타뉴스 원본 저장 기능 추가  
+티스토리  관련 버그 수정  
+
 # Contact
 본 TWICE 갤러리 짤 다운로더와 관련 문의사항은 아래 오픈카톡 주소로 연락바랍니다.  
 https://open.kakao.com/o/sfmnlrpb  
