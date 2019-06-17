@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>TWICE 갤러리 짤 다운로더 v1.4</string>
+   <string>TWICE 갤러리 짤 다운로더 v1.41</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -418,7 +418,7 @@
     </widget>
     <widget class="QWidget" name="tab_2">
      <attribute name="title">
-      <string>네이버 포스트/티스토리</string>
+      <string>네이버 포스트/티스토리/톱스타뉴스</string>
      </attribute>
      <widget class="QLabel" name="label_8">
       <property name="geometry">
