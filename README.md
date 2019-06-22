@@ -51,7 +51,7 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 * 트리뷰 위젯의 모든 목록을 삭제합니다.
 
 #### 다운로드 할 주소  
-이미지를 다운로드 받을 네이버 포스트나 티스토리 주소를 한 줄에 한 개씩 적습니다.
+이미지를 다운로드 받을 네이버 포스트나 티스토리 주소, 톱스타뉴스 주소를 한 줄에 한 개씩 적습니다.
 
 # Release
 * [v1.0](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.0) - 2019/04/15  
@@ -96,6 +96,9 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 * [v1.41](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.41) - 2019/06/17  
 톱스타뉴스 원본 저장 기능 추가  
 티스토리  관련 버그 수정  
+
+* [v1.42](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.41) - 2019/06/23  
+특정 티스토리 페이지에서의 다운로드 오류 수정    
 
 # Contact
 본 TWICE 갤러리 짤 다운로더와 관련 문의사항은 아래 오픈카톡 주소로 연락바랍니다.  
