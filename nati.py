@@ -210,14 +210,21 @@ class Worker(QObject):
         
         for i in range(0, len(img_tag)):
             img_url = img_tag[i].get('src')
-            img_name = img_tag[i].get('data-filename') # New domain (k.kakaocdn.net)
-            if img_name is None: # Maybe old domain (t1.daumcdn.net)
+            if re.match("https://t1.daumcdn.net/cfile", img_url): # Old domain (t1.daumcdn.net)
                 img_name = img_tag[i].get('filename')
+                if img_name is None:
+                    img_name = urlparse.unquote(img_url.split('/')[-1]) + '.jpg' # Can't judge wheather the image is jpg, png or gif. So just save as a jpg file.
+
                 img_url += '?original'
 
-            if img_name is None: # This image isn't what you want to download or the page has no image.
-                continue
-            
+            elif re.match("https://k.kakaocdn.net/dn", img_url): # New domain (k.kakaocdn.net)
+                img_name = img_tag[i].get('data-filename')
+                if img_name is None:
+                    img_name = urlparse.unquote(img_url.split('/')[-2]) + '_' + urlparse.unquote(img_url.split('/')[-1])
+            else:
+                continue                
+                
+            img_name = re.sub("[/\\:*?\"<>|]", "_", img_name)
             self.finished.emit('다운로드 중 (%s): %s' % (status, img_name))
             
             if sprt:
@@ -276,5 +283,3 @@ class Worker(QObject):
             QThread.msleep(1000)
 
         self.finished.emit('다운로드 작업을 완료하였습니다.')
-
-
