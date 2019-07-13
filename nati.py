@@ -57,6 +57,9 @@ class Worker(QObject):
 
         for i in range(0, len(img_tag)):
             img_url = re.sub('\?type=\S+$', '', img_tag[i].get('data-src'))
+            if not 'post-phinf.pstatic.net' in img_url: # This image isn't what you want to download.
+                continue
+
             img_name = urlparse.unquote(img_url.split('/')[-1])
 
             self.finished.emit('다운로드 중 (%s): %s' % (status, img_name))
