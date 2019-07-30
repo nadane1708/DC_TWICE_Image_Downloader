@@ -5,7 +5,7 @@ from PyQt5 import uic, QtCore
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import dc
-import nati
+import blog_news
 import configparser
 
 
@@ -22,7 +22,7 @@ class MyWindow(QMainWindow, form_class, QObject):
         # UI Setting
         self.setupUi(self)
 
-        self.setFixedSize(397, 281) # Fix window size
+        self.setFixedSize(822, 602) # Fix window size
         self.setWindowFlags(QtCore.Qt.MSWindowsFixedSizeDialogHint) # Remove resizing mouse cursor
 
         # Quit setting
@@ -38,12 +38,9 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.reworker_thread = QThread()
         self.reworker.moveToThread(self.reworker_thread)
 
-        self.natiworker = nati.Worker()
+        self.natiworker = blog_news.Worker()
         self.natiworker_thread = QThread()
         self.natiworker.moveToThread(self.natiworker_thread)
-
-        # Tab
-        self.tabWidget.currentChanged.connect(self.tabIndexChanged)
 
         # Connecting Signals
         self._connectSignals()
@@ -71,7 +68,6 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.treeChild = []
         self.treeParent = QTreeWidgetItem()
 
-        self.expandTreeview.clicked.connect(self.btn_expandTreeview)
         self.tr_selectDel.clicked.connect(self.btn_trSelectDel)
         self.resetTreeview.clicked.connect(self.btn_resetTreeview)
 
@@ -117,13 +113,6 @@ class MyWindow(QMainWindow, form_class, QObject):
                 self.editPath_2.setText(parser.get('Preset', 'path_2'))
             except Exception as E:
                 self.eventHandling(['2', E])
-
-
-    def tabIndexChanged(self):
-        if self.tabWidget.currentIndex() == 1: # Tab index is changed to 1 (네이버 포스트/티스토리 탭)
-            self.is_expand = True
-            self.expandTreeview.setText("◀")
-            self.setFixedSize(822, 602)
 
     def selectionChanged(self):
         _gall_id = ['twice', 'twicetv', 'nayeone', 'jungyeon', 'momo', 'sanarang', 'jihyo', 'twicemina', 'dahyeon', 'sonchaeyoung', 'tzuyu0614', 'streaming']
@@ -239,16 +228,6 @@ class MyWindow(QMainWindow, form_class, QObject):
         ]
 
         self.nati_main_signal.emit(nati_list)
-
-    def btn_expandTreeview(self):
-        if self.is_expand: # Contract Main window size for hiding Treeview
-            self.is_expand = False
-            self.expandTreeview.setText("▶")
-            self.setFixedSize(397, 281)
-        else: # Expand Main window size for showing Treeview
-            self.is_expand = True
-            self.expandTreeview.setText("◀")
-            self.setFixedSize(822, 602)
 
     def btn_trSelectDel(self):
         tr_root = self.trWidget.invisibleRootItem()
