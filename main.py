@@ -93,6 +93,12 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.trWidget_2.resize(411, 511)
         self.trWidget_2.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
+        # DC Gallery Download Image Preview
+        self.dc_imgPreview.resize(351, 281)
+        pixmap = QPixmap('./res/icon.png')
+        pixmap = pixmap.scaledToHeight(281)
+        self.dc_imgPreview.setPixmap(pixmap)
+
         # Load settings from INI file
         parser = configparser.ConfigParser()
         if parser.read('setting.ini') == []:
@@ -290,6 +296,11 @@ class MyWindow(QMainWindow, form_class, QObject):
                 self.trWidget.addTopLevelItem(self.treeParent)
                 self.treeChild = []
             elif event_list[1] == '1':
+                if not event_list[5] is None:
+                    pixmap = QPixmap()
+                    pixmap.loadFromData(event_list[5])
+                    pixmap = pixmap.scaledToHeight(281)
+                    self.dc_imgPreview.setPixmap(pixmap)
                 self.treeChild.append([event_list[2], event_list[3], event_list[4]])
         elif event_list[0] == '4': # Update Treeview datas for naver post/tistory download
             if event_list[1] == '0':
