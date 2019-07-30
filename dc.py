@@ -150,11 +150,11 @@ class Worker(QObject):
                     img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._header)
                     file.write(img.content)
                     file.close()
-                self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php')])
+                self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
             except Exception as E:
                 file.close()
                 print('download image \n %s' % str(E))
-                self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php')])
+                self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
                 return
         else:
             try:
@@ -162,11 +162,11 @@ class Worker(QObject):
                     img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._header)
                     file.write(img.content)
                     file.close()
-                self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php')])
+                self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
             except Exception as E:
                 file.close()
                 print('download image \n %s' % str(E))
-                self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php')])
+                self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
                 return
 
         # Sleep for avoiding traffic block; Change value as you wish.
