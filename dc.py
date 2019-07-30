@@ -50,7 +50,14 @@ class Worker(QObject):
         try:
             res = req.get('%s%s' % (url, '&exception_mode=recommend') if rcmd else '%s' % url, headers=self._header)
             pageSoup = BeautifulSoup(res.text, "html.parser")
-            self._page_end = re.search("&page=([0-9]+)", pageSoup.find("a", {"class": "page_end"}).get("href")).group(1)
+            page_box = pageSoup.find("div", {"class": "bottom_paging_box"}).find_all('a')
+
+            if not page_box:
+                self._page_end = 1
+                return
+
+            for i in page_box:
+                self._page_end = re.search("&page=([0-9]+)", i.get("href")).group(1)
         except Exception as E:
             self.finished_err.emit(['2', E])
             return
@@ -207,7 +214,10 @@ class Worker(QObject):
         QThread.msleep(1000)
 
         if not page: # Page input is blank; Download whole pages
-            page = '1-%s' % self._page_end
+            if self._page_end == 1:
+                page = '1'
+            else:
+                page = '1-%s' % self._page_end
         else: # Unexpected input like Alphabet or Hangul
             p = re.compile("[^0-9-,]")
             if p.search(page):
