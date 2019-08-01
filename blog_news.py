@@ -17,7 +17,7 @@ class Worker(QObject):
         self._header = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
         }
 
         self.search_link = []
@@ -137,7 +137,7 @@ class Worker(QObject):
             img_url = 'http://www.topstarnews.net' + img_url
             img_name = urlparse.unquote(img_url.split('/')[-1])
             if img_name[-4:] == '.jpg':
-                img_url = 'http://www.topstarnews.net' + img_tag[i].get('data-org')
+                img_url = img_tag[i].get('data-org')
                 img_name = urlparse.unquote(img_url.split('/')[-1])
             elif not img_name[-4:] == '.gif':
                 continue
