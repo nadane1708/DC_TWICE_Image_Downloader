@@ -134,7 +134,6 @@ class Worker(QObject):
             if img_url is None: # No image tag
                 continue
 
-            img_url = 'http://www.topstarnews.net' + img_url
             img_name = urlparse.unquote(img_url.split('/')[-1])
             if img_name[-4:] == '.jpg':
                 img_url = img_tag[i].get('data-org')
@@ -181,7 +180,230 @@ class Worker(QObject):
         self.finished_err.emit(['4', '0', top_title, '', url])
         QThread.msleep(1300)
 
+    @pyqtSlot()
+    def dispatch(self, url, sprt, path, status):
+        try:
+            res = req.get(url, headers=self._header)
+            dpSoup = BeautifulSoup(res.text, "html.parser")
+        except:
+            self.finished_err.emit(['4', '0', '', '로드 실패', url])
+            QThread.msleep(1300)
+            return
 
+        if dpSoup.find("meta", {"property": "og:title"}) is None:
+            self.finished_err.emit(['4', '0', '', '로드 실패', url])
+            QThread.msleep(1300)
+            return
+
+        dp_title = '[Dispatch] ' + dpSoup.find("meta", {"property": "og:title"}).get("content").strip()
+        dp_title = re.sub("[/\\:*?\"<>|.]", "_", dp_title)
+        dp_title = re.sub("\n", "_", dp_title)
+
+        if not os.path.isdir(path):
+            try:
+                os.makedirs(path)
+            except Exception as E:
+                self.finished_err.emit(['2', E])
+                return
+
+        img_tag = dpSoup.find("section", {"class": "column read"}).find_all('img')
+
+        for i in range(0, len(img_tag)):
+            img_url = img_tag[i].get('src')
+            if img_url is None: # No image tag
+                continue
+
+            img_name = urlparse.unquote(img_url.split('/')[-1])
+
+            self.finished.emit('다운로드 중 (%s): %s' % (status, img_name))
+
+            if sprt:
+                if not os.path.isdir('%s%s' % (path, dp_title)):
+                    try:
+                        os.makedirs('%s%s' % (path, dp_title))
+                    except Exception as E:
+                        self.finished_err.emit(['2', E])
+                        return
+
+                try:
+                    with open('%s%s\\%s' % (path, dp_title, img_name), "wb") as file:
+                        img = req.get(img_url, headers=self._header)
+                        file.write(img.content)
+                        file.close()
+                    self.finished_err.emit(['4', '1', img_name, '성공', img_url])
+                except Exception as E:
+                    file.close()
+                    print('download image \n %s' % str(E))
+                    self.finished_err.emit(['4', '1', img_name, '실패', img_url])
+                    return
+            else:
+                try:
+                    with open('%s%s' % (path, img_name), "wb") as file:
+                        img = req.get(img_url, headers=self._header)
+                        file.write(img.content)
+                        file.close()
+                    self.finished_err.emit(['4', '1', img_name, '성공', img_url])
+                except Exception as E:
+                    file.close()
+                    print('download image \n %s' % str(E))
+                    self.finished_err.emit(['4', '1', img_name, '실패', img_url])
+                    return
+
+            QThread.msleep(500)
+
+        self.finished_err.emit(['4', '0', dp_title, '', url])
+        QThread.msleep(1300)
+
+    @pyqtSlot()
+    def tenasia(self, url, sprt, path, status):
+        try:
+            res = req.get(url, headers=self._header)
+            res.encoding = None
+            taSoup = BeautifulSoup(res.text, "html.parser")
+        except:
+            self.finished_err.emit(['4', '0', '', '로드 실패', url])
+            QThread.msleep(1300)
+            return
+
+        if taSoup.find("meta", {"property": "og:title"}) is None:
+            self.finished_err.emit(['4', '0', '', '로드 실패', url])
+            QThread.msleep(1300)
+            return
+
+        ta_title = '[Tenasia] ' + taSoup.find("meta", {"property": "og:title"}).get("content").strip()
+        ta_title = re.sub("[/\\:*?\"<>|.]", "_", ta_title)
+        ta_title = re.sub("\n", "_", ta_title)
+
+        if not os.path.isdir(path):
+            try:
+                os.makedirs(path)
+            except Exception as E:
+                self.finished_err.emit(['2', E])
+                return
+
+        img_tag = taSoup.find("div", {"class": "wp-caption aligncenter"}).find_all('img')
+
+        for i in range(0, len(img_tag)):
+            img_url = img_tag[i].get('srcset').split(',')[-1]
+            img_url = re.sub(" \d+w", "", img_url)
+            if img_url is None: # No image tag
+                continue
+
+            img_name = urlparse.unquote(img_url.split(',')[-1].split('/')[-1])
+            img_name = re.sub(" \d+w", "", img_name)
+
+            self.finished.emit('다운로드 중 (%s): %s' % (status, img_name))
+
+            if sprt:
+                if not os.path.isdir('%s%s' % (path, ta_title)):
+                    try:
+                        os.makedirs('%s%s' % (path, ta_title))
+                    except Exception as E:
+                        self.finished_err.emit(['2', E])
+                        return
+
+                try:
+                    with open('%s%s\\%s' % (path, ta_title, img_name), "wb") as file:
+                        img = req.get(img_url, headers=self._header)
+                        file.write(img.content)
+                        file.close()
+                    self.finished_err.emit(['4', '1', img_name, '성공', img_url])
+                except Exception as E:
+                    file.close()
+                    print('download image \n %s' % str(E))
+                    self.finished_err.emit(['4', '1', img_name, '실패', img_url])
+                    return
+            else:
+                try:
+                    with open('%s%s' % (path, img_name), "wb") as file:
+                        img = req.get(img_url, headers=self._header)
+                        file.write(img.content)
+                        file.close()
+                    self.finished_err.emit(['4', '1', img_name, '성공', img_url])
+                except Exception as E:
+                    file.close()
+                    print('download image \n %s' % str(E))
+                    self.finished_err.emit(['4', '1', img_name, '실패', img_url])
+                    return
+
+            QThread.msleep(500)
+
+        self.finished_err.emit(['4', '0', ta_title, '', url])
+        QThread.msleep(1300)
+
+    @pyqtSlot()
+    def news1(self, url, sprt, path, status):
+        try:
+            res = req.get(url, headers=self._header)
+            n1Soup = BeautifulSoup(res.text, "html.parser")
+        except:
+            self.finished_err.emit(['4', '0', '', '로드 실패', url])
+            QThread.msleep(1300)
+            return
+
+        if n1Soup.find("meta", {"property": "og:title"}) is None:
+            self.finished_err.emit(['4', '0', '', '로드 실패', url])
+            QThread.msleep(1300)
+            return
+
+        n1_title = '[News1] ' + n1Soup.find("meta", {"property": "og:title"}).get("content").strip()
+        n1_title = re.sub("[/\\:*?\"<>|.]", "_", n1_title)
+        n1_title = re.sub("\n", "_", n1_title)
+
+        if not os.path.isdir(path):
+            try:
+                os.makedirs(path)
+            except Exception as E:
+                self.finished_err.emit(['2', E])
+                return
+
+        img_tag = n1Soup.find("div", {"class": "article"}).find_all('img')
+
+        for i in range(0, len(img_tag)):
+            img_url = img_tag[i].get('src')
+            if img_url is None: # No image tag
+                continue
+
+            img_name = urlparse.unquote(img_url.split('/')[-2]) + '_' + str(i) + '.jpg'
+
+            self.finished.emit('다운로드 중 (%s): %s' % (status, img_name))
+
+            if sprt:
+                if not os.path.isdir('%s%s' % (path, n1_title)):
+                    try:
+                        os.makedirs('%s%s' % (path, n1_title))
+                    except Exception as E:
+                        self.finished_err.emit(['2', E])
+                        return
+
+                try:
+                    with open('%s%s\\%s' % (path, n1_title, img_name), "wb") as file:
+                        img = req.get(img_url, headers=self._header)
+                        file.write(img.content)
+                        file.close()
+                    self.finished_err.emit(['4', '1', img_name, '성공', img_url])
+                except Exception as E:
+                    file.close()
+                    print('download image \n %s' % str(E))
+                    self.finished_err.emit(['4', '1', img_name, '실패', img_url])
+                    return
+            else:
+                try:
+                    with open('%s%s' % (path, img_name), "wb") as file:
+                        img = req.get(img_url, headers=self._header)
+                        file.write(img.content)
+                        file.close()
+                    self.finished_err.emit(['4', '1', img_name, '성공', img_url])
+                except Exception as E:
+                    file.close()
+                    print('download image \n %s' % str(E))
+                    self.finished_err.emit(['4', '1', img_name, '실패', img_url])
+                    return
+
+            QThread.msleep(500)
+
+        self.finished_err.emit(['4', '0', n1_title, '', url])
+        QThread.msleep(1300)
         
     @pyqtSlot()
     def tistory(self, url, sprt, path, status):
@@ -280,6 +502,12 @@ class Worker(QObject):
                 self.naverPost(self.search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(self.search_link)))
             elif 'topstarnews.net' in self.search_link[i]: # Topstarnews
                 self.topstarnews(self.search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(self.search_link)))
+            elif 'dispatch.co.kr' in self.search_link[i]: # Dispatch
+                self.dispatch(self.search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(self.search_link)))
+            elif 'tenasia.hankyung.com' in self.search_link[i]: # Tenasia
+                self.tenasia(self.search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(self.search_link)))
+            elif 'news1.kr' in self.search_link[i]: # News1
+                self.news1(self.search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(self.search_link)))
             else: # Tistory or Unknown URL
                 self.tistory(self.search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(self.search_link)))
 
