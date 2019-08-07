@@ -98,10 +98,18 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 티스토리  관련 버그 수정  
 
 * [v1.42](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.42) - 2019/06/23  
-특정 티스토리 페이지에서의 다운로드 오류 수정    
+특정 티스토리 페이지에서의 다운로드 오류 수정  
 
 * [v1.43](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.43) - 2019/07/15  
-특정 네이버 포스트 페이지에서의 다운로드 오류 수정    
+특정 네이버 포스트 페이지에서의 다운로드 오류 수정  
+
+* [v1.44](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.44) - 2019/07/31  
+특정 DC 갤러리에서의 페이지 분석 오류 수정  
+
+* [v1.5](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.5) - 2019/08/07  
+인스타그램 다운로드 기능 추가  
+디스패치, 텐아시아, 뉴스원, 오센 기사짤 다운로드 기능 추가  
+톱스타뉴스 기사짤 다운로드 오류 수정  
 
 # Contact
 본 TWICE 갤러리 짤 다운로더와 관련 문의사항은 아래 오픈카톡 주소로 연락바랍니다.  
