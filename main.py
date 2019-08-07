@@ -6,6 +6,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import dc
 import blog_news
+import sns
 import configparser
 
 
@@ -15,6 +16,7 @@ class MyWindow(QMainWindow, form_class, QObject):
     main_signal = pyqtSignal(list)
     re_main_signal = pyqtSignal(list)
     nati_main_signal = pyqtSignal(list)
+    sns_main_signal = pyqtSignal(list)
 
     def __init__(self):
         super().__init__()
@@ -42,6 +44,10 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.natiworker_thread = QThread()
         self.natiworker.moveToThread(self.natiworker_thread)
 
+        self.snsworker = sns.Worker()
+        self.snsworker_thread = QThread()
+        self.snsworker.moveToThread(self.snsworker_thread)
+
         # Connecting Signals
         self._connectSignals()
 
@@ -55,8 +61,9 @@ class MyWindow(QMainWindow, form_class, QObject):
 
         # PushButton
         self.openPath.clicked.connect(self.btn_openpath)
-
         self.openPath_2.clicked.connect(self.btn_openpath_2)
+        self.insta_allOpenPath.clicked.connect(self.btn_openpath_SNS_1)
+        self.insta_segOpenPath.clicked.connect(self.btn_openpath_SNS_2)
 
         # StatusBar
         self.statusBar = QStatusBar(self)
@@ -95,9 +102,12 @@ class MyWindow(QMainWindow, form_class, QObject):
 
         # DC Gallery Download Image Preview
         self.dc_imgPreview.resize(351, 281)
-        pixmap = QPixmap('./res/icon.png')
-        pixmap = pixmap.scaledToHeight(281)
-        self.dc_imgPreview.setPixmap(pixmap)
+        dc_pixmap = QPixmap('./res/icon.png')
+        dc_pixmap = dc_pixmap.scaledToHeight(281)
+        self.dc_imgPreview.setPixmap(dc_pixmap)
+
+        # Instagram Download Image Preview
+        self.insta_imgPreview.resize(375, 341)
 
         # Load settings from INI file
         parser = configparser.ConfigParser()
@@ -114,9 +124,12 @@ class MyWindow(QMainWindow, form_class, QObject):
                 self.excptPreview.setChecked(bool(int(parser.get('Preset', 'preview'))))
                 self.folderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt'))))
                 self.editPath.setText(parser.get('Preset', 'path'))
-
                 self.folderSeparate_2.setChecked(bool(int(parser.get('Preset', 'sprt_2'))))
                 self.editPath_2.setText(parser.get('Preset', 'path_2'))
+                self.insta_allFolderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt_3'))))
+                self.insta_allEditPath.setText(parser.get('Preset', 'path_3'))
+                self.insta_segFolderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt_4'))))
+                self.insta_segEditPath.setText(parser.get('Preset', 'path_4'))
             except Exception as E:
                 self.eventHandling(['2', E])
 
@@ -133,10 +146,20 @@ class MyWindow(QMainWindow, form_class, QObject):
         fname = QFileDialog.getExistingDirectory(self)
         self.editPath_2.setText('%s\\' % os.path.normpath(fname)) # os.path.normpath(path) --> Change "/" to "\" on Windows OS
 
+    def btn_openpath_SNS_1(self):
+        fname = QFileDialog.getExistingDirectory(self)
+        self.insta_allEditPath.setText('%s\\' % os.path.normpath(fname))
+
+    def btn_openpath_SNS_2(self):
+        fname = QFileDialog.getExistingDirectory(self)
+        self.insta_segEditPath.setText('%s\\' % os.path.normpath(fname))
+
     def _connectSignals(self):
         
         self.downloadCancel.clicked.connect(self.forceWorkerReset)
         self.downloadCancel_2.clicked.connect(self.forceWorkerReset)
+        self.insta_allCancel.clicked.connect(self.forceWorkerReset)
+        self.insta_segCancel.clicked.connect(self.forceWorkerReset)
 
         # Connect worker's pyqtSignal to pyqtSlot
         self.worker.finished.connect(self.updateStatusBar)
@@ -148,6 +171,9 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.natiworker.finished.connect(self.updateStatusBar)
         self.natiworker.finished_err.connect(self.eventHandling)
 
+        self.snsworker.finished.connect(self.updateStatusBar)
+        self.snsworker.finished_err.connect(self.eventHandling)
+
         # Solved parameter problem for QT connect: https://stackoverflow.com/questions/23317195/pyqt-movetothread-does-not-work-when-using-partial-for-slot
         self.main_signal.connect(self.worker.main)
         self.downloadImg.clicked.connect(self.transmit_content)
@@ -157,6 +183,10 @@ class MyWindow(QMainWindow, form_class, QObject):
 
         self.nati_main_signal.connect(self.natiworker.main)
         self.downloadImg_2.clicked.connect(self.btn_downloadImg_2)
+
+        self.sns_main_signal.connect(self.snsworker.main)
+        self.insta_allDownload.clicked.connect(self.btn_downloadSNS_1)
+        self.insta_segDownload.clicked.connect(self.btn_downloadSNS_2)
 
     def forceWorkerReset(self, var=False):
         status = True
@@ -181,6 +211,12 @@ class MyWindow(QMainWindow, form_class, QObject):
             self.natiworker_thread.terminate()
             self.natiworker_thread.wait()
 
+        if self.snsworker_thread.isRunning():
+            if status:
+                self.statusBar.showMessage('다운로드를 취소하였습니다.')
+            self.snsworker_thread.terminate()
+            self.snsworker_thread.wait()
+
     def transmit_content(self):
         self.forceWorkerReset(True)
         self.worker_thread.start()
@@ -199,7 +235,6 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.main_signal.emit(content_list)
 
     def btn_retryDownload(self):
-        # print('trying redownload..')
         self.forceWorkerReset(True)
         self.reworker_thread.start()
 
@@ -255,6 +290,32 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.trWidget_2.clear()
         self.statusBar.showMessage('다운 목록을 모두 삭제했습니다.')
 
+    def btn_downloadSNS_1(self):
+        self.forceWorkerReset(True)
+        self.snsworker_thread.start()
+
+        sns_list = [
+            1,
+            self.insta_userID.text(),
+            self.insta_allFolderSeparate.isChecked(),
+            self.insta_allEditPath.text()
+        ]
+
+        self.sns_main_signal.emit(sns_list)
+
+    def btn_downloadSNS_2(self):
+        self.forceWorkerReset(True)
+        self.snsworker_thread.start()
+
+        sns_list = [
+            2,
+            self.insta_url.toPlainText(),
+            self.insta_segFolderSeparate.isChecked(),
+            self.insta_segEditPath.text()
+        ]
+
+        self.sns_main_signal.emit(sns_list)
+
     @pyqtSlot(str)
     def updateStatusBar(self, signal):
         self.statusBar.showMessage(signal)
@@ -297,12 +358,12 @@ class MyWindow(QMainWindow, form_class, QObject):
                 self.treeChild = []
             elif event_list[1] == '1':
                 if not event_list[5] is None:
-                    pixmap = QPixmap()
-                    pixmap.loadFromData(event_list[5])
-                    pixmap = pixmap.scaledToHeight(281)
-                    self.dc_imgPreview.setPixmap(pixmap)
+                    dc_pixmap = QPixmap()
+                    dc_pixmap.loadFromData(event_list[5])
+                    dc_pixmap = dc_pixmap.scaledToHeight(281)
+                    self.dc_imgPreview.setPixmap(dc_pixmap)
                 self.treeChild.append([event_list[2], event_list[3], event_list[4]])
-        elif event_list[0] == '4': # Update Treeview datas for naver post/tistory download
+        elif event_list[0] == '4': # Update Treeview datas for blog / news download
             if event_list[1] == '0':
                 self.treeParent_2 = QTreeWidgetItem([event_list[2], event_list[3], event_list[4]])
                 if not self.treeChild_2 == []:
@@ -312,6 +373,11 @@ class MyWindow(QMainWindow, form_class, QObject):
                 self.treeChild_2 = []
             elif event_list[1] == '1':
                 self.treeChild_2.append([event_list[2], event_list[3], event_list[4]])
+        elif event_list[0] == '5': # Update Instagram download datas
+            sns_pixmap = QPixmap()
+            sns_pixmap.loadFromData(event_list[1])
+            sns_pixmap = sns_pixmap.scaledToHeight(341)
+            self.insta_imgPreview.setPixmap(sns_pixmap)
 
     def closeEvent(self, event):
         # Save settings to INI file
@@ -329,6 +395,10 @@ class MyWindow(QMainWindow, form_class, QObject):
             'path': self.editPath.text(),
             'sprt_2': int(self.folderSeparate_2.isChecked()),
             'path_2': self.editPath_2.text(),
+            'sprt_3': int(self.insta_allFolderSeparate.isChecked()),
+            'path_3': self.insta_allEditPath.text(),
+            'sprt_4': int(self.insta_segFolderSeparate.isChecked()),
+            'path_4': self.insta_segEditPath.text()
         }
 
         try:
