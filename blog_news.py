@@ -404,6 +404,78 @@ class Worker(QObject):
 
         self.finished_err.emit(['4', '0', n1_title, '', url])
         QThread.msleep(1300)
+
+    @pyqtSlot()
+    def osen(self, url, sprt, path, status):
+        try:
+            res = req.get(url, headers=self._header)
+            osSoup = BeautifulSoup(res.text, "html.parser")
+        except:
+            self.finished_err.emit(['4', '0', '', '로드 실패', url])
+            QThread.msleep(1300)
+            return
+
+        if osSoup.find("meta", {"property": "og:title"}) is None:
+            self.finished_err.emit(['4', '0', '', '로드 실패', url])
+            QThread.msleep(1300)
+            return
+
+        os_title = '[Osen] ' + osSoup.find("meta", {"property": "og:title"}).get("content").strip()
+        os_title = re.sub("[/\\:*?\"<>|.]", "_", os_title)
+        os_title = re.sub("\n", "_", os_title)
+
+        if not os.path.isdir(path):
+            try:
+                os.makedirs(path)
+            except Exception as E:
+                self.finished_err.emit(['2', E])
+                return
+
+        img_tag = osSoup.find("div", {"class": "detailView"}).find_all('img')
+
+        for i in range(0, len(img_tag)):
+            img_url = img_tag[i].get('src')
+            if img_url is None: # No image tag
+                continue
+
+            img_name = urlparse.unquote(img_url.split('/')[-1])
+
+            self.finished.emit('다운로드 중 (%s): %s' % (status, img_name))
+
+            if sprt:
+                if not os.path.isdir('%s%s' % (path, os_title)):
+                    try:
+                        os.makedirs('%s%s' % (path, os_title))
+                    except Exception as E:
+                        self.finished_err.emit(['2', E])
+                        return
+
+                try:
+                    with open('%s%s\\%s' % (path, os_title, img_name), "wb") as file:
+                        img = req.get(img_url, headers=self._header)
+                        file.write(img.content)
+                        file.close()
+                    self.finished_err.emit(['4', '1', img_name, '성공', img_url])
+                except Exception as E:
+                    file.close()
+                    self.finished_err.emit(['4', '1', img_name, '실패', img_url])
+                    return
+            else:
+                try:
+                    with open('%s%s' % (path, img_name), "wb") as file:
+                        img = req.get(img_url, headers=self._header)
+                        file.write(img.content)
+                        file.close()
+                    self.finished_err.emit(['4', '1', img_name, '성공', img_url])
+                except Exception as E:
+                    file.close()
+                    self.finished_err.emit(['4', '1', img_name, '실패', img_url])
+                    return
+
+            QThread.msleep(500)
+
+        self.finished_err.emit(['4', '0', os_title, '', url])
+        QThread.msleep(1300)
         
     @pyqtSlot()
     def tistory(self, url, sprt, path, status):
@@ -508,6 +580,8 @@ class Worker(QObject):
                 self.tenasia(self.search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(self.search_link)))
             elif 'news1.kr' in self.search_link[i]: # News1
                 self.news1(self.search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(self.search_link)))
+            elif 'osen.mt.co.kr' in self.search_link[i]: # Osen
+                self.osen(self.search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(self.search_link)))
             else: # Tistory or Unknown URL
                 self.tistory(self.search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(self.search_link)))
 
