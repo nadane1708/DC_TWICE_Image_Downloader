@@ -110,6 +110,7 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 인스타그램 다운로드 기능 추가  
 디스패치, 텐아시아, 뉴스원, 오센 기사짤 다운로드 기능 추가  
 톱스타뉴스 기사짤 다운로드 오류 수정  
+DC 갤러리 / 인스타그램 다운로드 이미지 미리보기 기능 추가  
 
 # Contact
 본 TWICE 갤러리 짤 다운로더와 관련 문의사항은 아래 오픈카톡 주소로 연락바랍니다.  
@@ -118,7 +119,8 @@ https://open.kakao.com/o/sfmnlrpb
 # Thanks to
 [트갤차트봇](https://gall.dcinside.com/board/view?id=twice&no=3939753) - Inspired by his/her program  
 [Zard](https://gallog.dcinside.com/blueaqua1019) (DC TWICE Gallery) - Beta Tester & Feedback  
-[별*](https://gallog.dcinside.com/acalffkstlqkf) (DC TWICE Gallery) - Feedback
+[별*](https://gallog.dcinside.com/acalffkstlqkf) (DC TWICE Gallery) - Feedback  
+[과일별·](https://gallog.dcinside.com/starfruit135) (DC Gallery) - Feedback
 
 # License
 GNU General Public License v3.0
