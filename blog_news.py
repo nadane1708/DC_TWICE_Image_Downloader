@@ -515,9 +515,12 @@ class Worker(QObject):
                 img_url += '?original'
 
             elif re.match("https://k.kakaocdn.net/dn", img_url): # New domain (k.kakaocdn.net)
+                '''
                 img_name = img_tag[i].get('data-filename')
                 if img_name is None:
                     img_name = urlparse.unquote(img_url.split('/')[-2]) + '_' + urlparse.unquote(img_url.split('/')[-1])
+                '''
+                img_name = urlparse.unquote(img_url.split('/')[-2]) + '_' + urlparse.unquote(img_url.split('/')[-1])
             else:
                 continue                
                 
