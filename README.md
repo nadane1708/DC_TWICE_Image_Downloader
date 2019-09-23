@@ -112,6 +112,12 @@ TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https:/
 톱스타뉴스 기사짤 다운로드 오류 수정  
 DC 갤러리 / 인스타그램 다운로드 이미지 미리보기 기능 추가  
 
+* [v1.51](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.51) - 2019/09/04  
+티스토리 다운 시 파일명 중복 오류 수정  
+
+* [v1.52](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.52) - 2019/09/24  
+DC 갤러리 다운로드 이미지 엑박 오류 수정  
+
 # Contact
 본 TWICE 갤러리 짤 다운로더와 관련 문의사항은 아래 오픈카톡 주소로 연락바랍니다.  
 https://open.kakao.com/o/sfmnlrpb  
