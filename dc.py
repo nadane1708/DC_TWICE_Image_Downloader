@@ -21,6 +21,13 @@ class Worker(QObject):
             'Host': 'gall.dcinside.com',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
         }
+        self._image_header = {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Host': 'img.dcinside.com',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
+            'Referer': 'https://gall.dcinside.com/'        
+        }
 
     # Check if the gallery is major or minor
     @pyqtSlot()
@@ -147,7 +154,7 @@ class Worker(QObject):
                     return
             try:
                 with open('%s%s\\%s' % (directory, subject, filename), "wb") as file:
-                    img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._header)
+                    img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._image_header)
                     file.write(img.content)
                     file.close()
                 self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
@@ -159,7 +166,7 @@ class Worker(QObject):
         else:
             try:
                 with open('%s%s' % (directory, filename), "wb") as file:
-                    img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._header)
+                    img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._image_header)
                     file.write(img.content)
                     file.close()
                 self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
