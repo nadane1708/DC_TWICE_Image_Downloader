@@ -88,6 +88,11 @@
       </item>
       <item>
        <property name="text">
+        <string>이전 TWICE 갤러리</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
         <string>TWICE TV 갤러리</string>
        </property>
       </item>
