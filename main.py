@@ -56,7 +56,7 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.selectGallery.setCompleter(self.completer)
 
         # ComboBox
-        self.selectGallery.setEditText('twice')
+        self.selectGallery.setEditText('twice_new')
         self.selectGallery.activated.connect(self.selectionChanged)
 
         # PushButton
@@ -134,7 +134,7 @@ class MyWindow(QMainWindow, form_class, QObject):
                 self.eventHandling(['2', E])
 
     def selectionChanged(self):
-        _gall_id = ['twice', 'twicetv', 'nayeone', 'jungyeon', 'momo', 'sanarang', 'jihyo', 'twicemina', 'dahyeon', 'sonchaeyoung', 'tzuyu0614', 'streaming']
+        _gall_id = ['twice_new', 'twice', 'twicetv', 'nayeone', 'jungyeon', 'momo', 'sanarang', 'jihyo', 'twicemina', 'dahyeon', 'sonchaeyoung', 'tzuyu0614', 'streaming']
 
         self.selectGallery.setEditText(_gall_id[self.selectGallery.currentIndex()])
 
