@@ -17,7 +17,7 @@ class Worker(QObject):
         self._header = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
         }
 
         self.search_link = []
@@ -476,6 +476,82 @@ class Worker(QObject):
 
         self.finished_err.emit(['4', '0', os_title, '', url])
         QThread.msleep(1300)
+
+    @pyqtSlot()
+    def stardailynews(self, url, sprt, path, status):
+        try:
+            res = req.get(url, headers=self._header)
+            res.encoding = None
+            sdnSoup = BeautifulSoup(res.text, "html.parser")
+        except:
+            self.finished_err.emit(['4', '0', '', '로드 실패', url])
+            QThread.msleep(1300)
+            return
+
+        if sdnSoup.find("meta", {"property": "og:title"}) is None:
+            self.finished_err.emit(['4', '0', '', '로드 실패', url])
+            QThread.msleep(1300)
+            return
+
+        sdn_title = '[Stardailynews] ' + sdnSoup.find("meta", {"property": "og:title"}).get("content").strip()
+        sdn_title = re.sub("[/\\:*?\"<>|.]", "_", sdn_title)
+        sdn_title = re.sub("\n", "_", sdn_title)
+
+        if not os.path.isdir(path):
+            try:
+                os.makedirs(path)
+            except Exception as E:
+                self.finished_err.emit(['2', E])
+                return
+
+        img_tag = sdnSoup.find("div", {"id": "_article"}).find_all('img')
+
+        for i in range(0, len(img_tag)):
+            img_url = img_tag[i].get('src')
+            if img_url is None: # No image tag
+                continue
+
+            if not 'stardailynews.co.kr' in img_url:
+                img_url = 'http://www.stardailynews.co.kr' + img_url
+
+            img_name = urlparse.unquote(img_url.split('/')[-1])
+
+            self.finished.emit('다운로드 중 (%s): %s' % (status, img_name))
+
+            if sprt:
+                if not os.path.isdir('%s%s' % (path, sdn_title)):
+                    try:
+                        os.makedirs('%s%s' % (path, sdn_title))
+                    except Exception as E:
+                        self.finished_err.emit(['2', E])
+                        return
+
+                try:
+                    with open('%s%s\\%s' % (path, sdn_title, img_name), "wb") as file:
+                        img = req.get(img_url, headers=self._header)
+                        file.write(img.content)
+                        file.close()
+                    self.finished_err.emit(['4', '1', img_name, '성공', img_url])
+                except Exception as E:
+                    file.close()
+                    self.finished_err.emit(['4', '1', img_name, '실패', img_url])
+                    return
+            else:
+                try:
+                    with open('%s%s' % (path, img_name), "wb") as file:
+                        img = req.get(img_url, headers=self._header)
+                        file.write(img.content)
+                        file.close()
+                    self.finished_err.emit(['4', '1', img_name, '성공', img_url])
+                except Exception as E:
+                    file.close()
+                    self.finished_err.emit(['4', '1', img_name, '실패', img_url])
+                    return
+
+            QThread.msleep(500)
+
+        self.finished_err.emit(['4', '0', sdn_title, '', url])
+        QThread.msleep(1300)
         
     @pyqtSlot()
     def tistory(self, url, sprt, path, status):
@@ -585,6 +661,8 @@ class Worker(QObject):
                 self.news1(self.search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(self.search_link)))
             elif 'osen.mt.co.kr' in self.search_link[i]: # Osen
                 self.osen(self.search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(self.search_link)))
+            elif 'stardailynews.co.kr' in self.search_link[i]: # Stardailynews
+                self.stardailynews(self.search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(self.search_link)))
             else: # Tistory or Unknown URL
                 self.tistory(self.search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(self.search_link)))
 
