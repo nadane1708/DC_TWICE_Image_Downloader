@@ -19,13 +19,13 @@ class Worker(QObject):
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
             'Host': 'gall.dcinside.com',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
         }
         self._image_header = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
             'Host': 'img.dcinside.com',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36',
             'Referer': 'https://gall.dcinside.com/'        
         }
 
@@ -108,12 +108,14 @@ class Worker(QObject):
                 postSoup = BeautifulSoup(res.text, "html.parser")
 
                 if postSoup.find("meta", {"name": "description"}) is None: # The post has deleted or has been failed to load
-                    self.finished_err.emit(['3', '0', subject, '로드 실패', 'https://gall.dcinside.com%s' % self._search_link[i]])
+                    self.finished_err.emit(['3', '0', subject, '로드 실패', 'https://gall.dcinside.com%s' % self._search_link[i], ''])
                     QThread.msleep(1300)
                     continue
 
+                post_content = postSoup.find("div", {"class": "writing_view_box"}).text.strip()
+
                 if postSoup.find("ul", {"class": "appending_file"}) is None: # The post has no images
-                    self.finished_err.emit(['3', '0', subject, '이미지 없음', 'https://gall.dcinside.com%s' % self._search_link[i]])
+                    self.finished_err.emit(['3', '0', subject, '이미지 없음', 'https://gall.dcinside.com%s' % self._search_link[i], post_content])
                     QThread.msleep(1300)
                     continue
 
@@ -125,10 +127,10 @@ class Worker(QObject):
                         self.download_image(j.get("href"), (j.text if j.text else 'null'), drtry, '[%s] %s' % (self._search_number[i], self._search_subject[i]))
                     else:
                         self.download_image(j.get("href"), '[%s] %s' % (self._search_number[i], (j.text if j.text else 'null')), drtry)
-                self.finished_err.emit(['3', '0', subject, '', 'https://gall.dcinside.com%s' % self._search_link[i]])
+                self.finished_err.emit(['3', '0', subject, '', 'https://gall.dcinside.com%s' % self._search_link[i], post_content])
             except Exception as E:
                 print('get image \n %s' % str(E))
-                self.finished_err.emit(['3', '0', subject, '로드 실패', 'https://gall.dcinside.com%s' % self._search_link[i]])
+                self.finished_err.emit(['3', '0', subject, '로드 실패', 'https://gall.dcinside.com%s' % self._search_link[i], ''])
                 QThread.msleep(1300)
 
     # Download images from posts to directory
@@ -365,7 +367,7 @@ class retryWorker(QObject):
                     return
             try:
                 with open('%s%s\\%s' % (directory, subject, filename), "wb") as file:
-                    img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._header)
+                    img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._image_header)
                     file.write(img.content)
                     file.close()
                 self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php')])
@@ -377,7 +379,7 @@ class retryWorker(QObject):
         else:
             try:
                 with open('%s%s' % (directory, filename), "wb") as file:
-                    img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._header)
+                    img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._image_header)
                     file.write(img.content)
                     file.close()
                 self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php')])
@@ -398,12 +400,14 @@ class retryWorker(QObject):
                 re_postSoup = BeautifulSoup(re_res.text, "html.parser")
 
                 if re_postSoup.find("meta", {"name": "description"}) is None: # The post has deleted or has been failed to load
-                    self.finished_err.emit(['3', '0', re_list[0][i][0], '로드 실패', '%s' % re_list[0][i][1]])
+                    self.finished_err.emit(['3', '0', re_list[0][i][0], '로드 실패', '%s' % re_list[0][i][1], ''])
                     QThread.msleep(1300)
                     continue
 
+                re_post_content = re_postSoup.find("div", {"class": "writing_view_box"}).text.strip()
+
                 if re_postSoup.find("ul", {"class": "appending_file"}) is None: # The post has no images
-                    self.finished_err.emit(['3', '0', re_list[0][i][0], '이미지 없음', '%s' % re_list[0][i][1]])
+                    self.finished_err.emit(['3', '0', re_list[0][i][0], '이미지 없음', '%s' % re_list[0][i][1], re_post_content])
                     QThread.msleep(1300)
                     continue
 
@@ -416,10 +420,10 @@ class retryWorker(QObject):
                     else:
                         number = re.match("\[(\d+)\]", re_list[0][i][0]).group()
                         self.download_image(j.get("href"), '[%s] %s' % (number, (j.text if j.text else 'null')), re_list[2])
-                self.finished_err.emit(['3', '0', re_list[0][i][0], '', '%s' % re_list[0][i][1]])
+                self.finished_err.emit(['3', '0', re_list[0][i][0], '', '%s' % re_list[0][i][1], re_post_content])
             except Exception as E:
                 print(str(E))
-                self.finished_err.emit(['3', '0', re_list[0][i][0], '로드 실패', '%s' % re_list[0][i][1]])
+                self.finished_err.emit(['3', '0', re_list[0][i][0], '로드 실패', '%s' % re_list[0][i][1], ''])
                 QThread.msleep(1300)
 
         self.finished.emit('재다운로드 작업을 완료하였습니다.')
