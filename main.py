@@ -350,10 +350,12 @@ class MyWindow(QMainWindow, form_class, QObject):
             self.forceWorkerReset()
         elif event_list[0] == '3': # Update Treeview datas
             if event_list[1] == '0':
-                self.treeParent = QTreeWidgetItem([event_list[2], event_list[3], event_list[4]])
+                self.treeParent = QTreeWidgetItem([event_list[2], event_list[3], event_list[4], event_list[5]])
                 if not self.treeChild == []:
                     for i in self.treeChild:
                         self.treeParent.addChild(QTreeWidgetItem(i))
+                if not event_list[5] is None:
+                    self.treeParent.setToolTip(0, event_list[5]) # Set tooltips for previewing texts of the posts
                 self.trWidget.addTopLevelItem(self.treeParent)
                 self.treeChild = []
             elif event_list[1] == '1':
