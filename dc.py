@@ -346,6 +346,13 @@ class retryWorker(QObject):
             'Host': 'gall.dcinside.com',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
         }
+        self._image_header = {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Host': 'img.dcinside.com',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36',
+            'Referer': 'https://gall.dcinside.com/'        
+        }
 
     @pyqtSlot()
     def download_image(self, url, filename, directory, subject=''):
