@@ -69,7 +69,6 @@ class Worker(QObject):
             self.finished_err.emit(['2', E])
             return
 
-
     # Get html from gallery page & Make link and subject lists
     @pyqtSlot()
     def get_page(self, url, page, rcmd):
@@ -78,20 +77,53 @@ class Worker(QObject):
             pageSoup = BeautifulSoup(res.text, "html.parser")
             data = pageSoup.find_all("td", {"class": "gall_tit ub-word"})
 
-            for i in data:
-                if i.parent.find("td", {"class": "gall_num"}).text == '공지':
-                    continue
-                elif i.parent.find("td", {"class": "gall_num"}).text == 'AD':
-                    continue
-                elif i.parent.find("td", {"class": "gall_num"}).text == '설문':
-                    continue
-                elif i.parent.find("td", {"class": "gall_num"}).text == '이슈':
-                    continue
+            if self.is_major: # Major gallery
+                for i in data:
+                    if i.parent.find("td", {"class": "gall_num"}).text == '공지':
+                        continue
+                    elif i.parent.find("td", {"class": "gall_num"}).text == 'AD':
+                        continue
+                    elif i.parent.find("td", {"class": "gall_num"}).text == '설문':
+                        continue
+                    elif i.parent.find("td", {"class": "gall_num"}).text == '이슈':
+                        continue
 
-                data_obj = i.find("a")
-                self._init_subject.append(data_obj.text.strip())
-                self._init_link.append(data_obj.get("href"))
-                self._init_number.append(i.parent.find("td", {"class": "gall_num"}).text)
+                    data_obj = i.find("a")
+                    self._init_subject.append(data_obj.text.strip())
+                    self._init_link.append(data_obj.get("href"))
+                    self._init_number.append(i.parent.find("td", {"class": "gall_num"}).text)
+            else:
+                if data[0].parent.find("td", {"class": "gall_subject"}): # Minor gallery with subject & title
+                    for i in data:
+                        if i.parent.find("td", {"class": "gall_subject"}).text == '공지':
+                            continue
+                        elif i.parent.find("td", {"class": "gall_subject"}).text == 'AD':
+                            continue
+                        elif i.parent.find("td", {"class": "gall_subject"}).text == '설문':
+                            continue
+                        elif i.parent.find("td", {"class": "gall_subject"}).text == '이슈':
+                            continue
+
+                        data_obj = i.find("a")
+                        self._init_subject.append(data_obj.text.strip())
+                        self._init_link.append(data_obj.get("href"))
+                        self._init_number.append(i.parent.find("td", {"class": "gall_num"}).text)
+                        self._init_headline.append(i.parent.find("td", {"class": "gall_subject"}).text)
+                else: # Minor gallery with title
+                    for i in data:
+                        if i.parent.find("td", {"class": "gall_num"}).text == '공지':
+                            continue
+                        elif i.parent.find("td", {"class": "gall_num"}).text == 'AD':
+                            continue
+                        elif i.parent.find("td", {"class": "gall_num"}).text == '설문':
+                            continue
+                        elif i.parent.find("td", {"class": "gall_num"}).text == '이슈':
+                            continue
+
+                        data_obj = i.find("a")
+                        self._init_subject.append(data_obj.text.strip())
+                        self._init_link.append(data_obj.get("href"))
+                        self._init_number.append(i.parent.find("td", {"class": "gall_num"}).text)
         except Exception as E:
             self.finished_err.emit(['2', E])
             return
@@ -188,14 +220,17 @@ class Worker(QObject):
         self._init_subject = []
         self._init_link = []
         self._init_number = []
+        self._init_headline = []
 
         self._search_subject = []
         self._search_link = []
         self._search_number = []
+        self._search_headline = []
 
         self._except_subject = []
         self._except_link = []
         self._except_number = []
+        self._except_headline = []
 
         self._page_end = 0
             
@@ -204,18 +239,19 @@ class Worker(QObject):
         page = list_[2]
         by = list_[3]
         rcmd = list_[4]
-        excpt = list_[5]
-        sprt = list_[6]
-        drtry = list_[7]
+        hdline = list_[5]
+        excpt = list_[6]
+        sprt = list_[7]
+        drtry = list_[8]
 
         # self.finished_err.emit(['※ 주의 사항', '한번에 너무 많은 페이지를 다운받게 되면\n트래픽 초과로 디시 서버 접속이 일시적으로\n중단되어 다운로드 작업이 중지 될 수 있습니다.\n이 점 유의 바랍니다.', ''])
 
         self.finished.emit('다운로드 작업을 시작합니다.')
-        is_major = self.check_gall(idx)
-        if is_major == -1:
+        self.is_major = self.check_gall(idx)
+        if self.is_major == -1:
             return
 
-        url = '%s%s' % ((self._major_url if is_major else self._minor_url), idx)
+        url = '%s%s' % ((self._major_url if self.is_major else self._minor_url), idx)
 
         self.get_final_page(url, rcmd) # Get the final page number for downloading whole pages and for additional purpose in the future
 
@@ -260,6 +296,9 @@ class Worker(QObject):
                                 self._search_link.append(self._init_link[j])
                                 self._search_number.append(self._init_number[j])
 
+                                if hdline and (self.is_major == False):
+                                    self._search_headline.append(self._init_headline[j])
+
                                 self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._search_subject))
 
                             continue
@@ -268,12 +307,18 @@ class Worker(QObject):
                         self._search_link.append(self._init_link[j])
                         self._search_number.append(self._init_number[j])
 
+                        if hdline and (self.is_major == False):
+                            self._search_headline.append(self._init_headline[j])
+
                         self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._search_subject))
         else:
             for j in range(0, len(self._init_subject)):
                 self._search_subject.append(self._init_subject[j])
                 self._search_link.append(self._init_link[j])
                 self._search_number.append(self._init_number[j])
+
+                if hdline and (self.is_major == False):
+                    self._search_headline.append(self._init_headline[j])
 
                 self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._search_subject))
 
@@ -286,6 +331,10 @@ class Worker(QObject):
                     self._search_number.pop(dupl_list[j] - j)
                     self._search_subject.pop(dupl_list[j] - j)
                     self._search_link.pop(dupl_list[j] - j)
+
+                    if hdline and (self.is_major == False):
+                        self._search_headline.pop(dupl_list[j] - j)
+
         except Exception as e:
             if str(e) == 'list index out of range':
                 pass
@@ -306,17 +355,60 @@ class Worker(QObject):
                     self._except_link.append(self._search_link[j])
                     self._except_number.append(self._search_number[j])
 
+                    if hdline and (self.is_major == False):
+                        self._except_headline.append(self._search_headline[j])
+
         for i in range(0, len(self._except_subject)):
             try:
                 self._search_subject.remove(self._except_subject[i])
                 self._search_link.remove(self._except_link[i])
                 self._search_number.remove(self._except_number[i])
+
+                if hdline and (self.is_major == False):
+                    self._search_headline.remove(self._except_headline[i])
             except ValueError as e:
                 if str(e) == 'list.remove(x): x not in list': # Pass when that error happens. Caused by duplicated elements of self._except_subject
                     pass
                 else:
                     raise
             self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._search_subject))
+
+        # If subject words exist, (Only works on Minor gallery with subject & title)
+        # Remove elements that don't include search subject keywords from lists
+        if hdline and (self.is_major == False):
+            hdline_index = 0
+            search_hdline = hdline.split(",")
+            is_include = False
+            for i in range(0, len(self._search_subject)):
+                for j in search_hdline:
+                    j = j.strip()
+                    if j == '':
+                        continue
+
+                    if self._search_headline[i] == j:
+                        is_include = True
+
+                if not is_include:
+                    temp_hdline = [self._search_subject[i], self._search_link[i], self._search_number[i], self._search_headline[i]]
+                    del self._search_subject[i]
+                    del self._search_link[i]
+                    del self._search_number[i]
+                    del self._search_headline[i]
+
+                    self._search_subject.insert(0, temp_hdline[0])
+                    self._search_link.insert(0, temp_hdline[1])
+                    self._search_number.insert(0, temp_hdline[2])
+                    self._search_headline.insert(0, temp_hdline[3])
+
+                    hdline_index += 1
+
+                is_include = False
+
+            if hdline_index:
+                del self._search_subject[0:hdline_index]
+                del self._search_link[0:hdline_index]
+                del self._search_number[0:hdline_index]
+                del self._search_headline[0:hdline_index]
 
         self.finished.emit('키워드 필터링 작업을 완료했습니다. (%s)' % len(self._search_subject))
         QThread.msleep(1000)
