@@ -120,6 +120,7 @@ class MyWindow(QMainWindow, form_class, QObject):
                 self.editKeyword.setText(parser.get('Preset', 'keyword'))
                 self.onlyBy.setChecked(bool(int(parser.get('Preset', 'by'))))
                 self.onlyRcmd.setChecked(bool(int(parser.get('Preset', 'rcmd'))))
+                self.editSubject.setText(parser.get('Preset', 'subject'))
                 self.editExcept.setText(parser.get('Preset', 'except'))
                 self.excptPreview.setChecked(bool(int(parser.get('Preset', 'preview'))))
                 self.folderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt'))))
@@ -193,6 +194,10 @@ class MyWindow(QMainWindow, form_class, QObject):
         if var:
             status = False
 
+        # Reset treeview child items
+        self.treeChild = []
+        self.treeChild_2 = []
+
         if self.worker_thread.isRunning():
             if status:
                 self.statusBar.showMessage('다운로드를 취소하였습니다.')
@@ -227,6 +232,7 @@ class MyWindow(QMainWindow, form_class, QObject):
             self.editPage.text(),
             self.onlyBy.isChecked(),
             self.onlyRcmd.isChecked(),
+            self.editSubject.text(),
             '%s,%s' % (self.editExcept.text(), '프리뷰') if self.excptPreview.isChecked() else self.editExcept.text(),
             self.folderSeparate.isChecked(),
             self.editPath.text()
@@ -391,6 +397,7 @@ class MyWindow(QMainWindow, form_class, QObject):
             'page': self.editPage.text(),
             'by': int(self.onlyBy.isChecked()),
             'rcmd': int(self.onlyRcmd.isChecked()),
+            'subject': self.editSubject.text(),
             'except': self.editExcept.text(),
             'preview': int(self.excptPreview.isChecked()),
             'sprt': int(self.folderSeparate.isChecked()),
