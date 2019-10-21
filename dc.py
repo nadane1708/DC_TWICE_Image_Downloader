@@ -343,35 +343,48 @@ class Worker(QObject):
 
         # Remove elements including except keywords from lists
         # print('Remove except word')
-        except_word = excpt.split(",")
-        for i in except_word:
-            i = i.strip() # Trim whitespace
-            if i == '':
-                continue
+        if excpt:
+            except_index = 0
+            except_word = excpt.split(",")
+            is_exclude = False
+            for i in range(0, len(self._search_title)):
+                for j in except_word:
+                    j = j.strip()
+                    if j == '':
+                        continue
 
-            for j in range(0, len(self._search_title)):
-                if i in self._search_title[j]:
-                    self._except_title.append(self._search_title[j])
-                    self._except_link.append(self._search_link[j])
-                    self._except_number.append(self._search_number[j])
+                    if j in self._search_title[i]:
+                        is_exclude = True
+
+                if is_exclude:
+                    if hdline and (self.is_major == False):
+                        temp_except = [self._search_title[i], self._search_link[i], self._search_number[i], self._search_subject[i]]
+                    else:
+                        temp_except = [self._search_title[i], self._search_link[i], self._search_number[i]]
+                    
+                    del self._search_title[i]
+                    del self._search_link[i]
+                    del self._search_number[i]
+                    del self._search_subject[i]
+
+                    self._search_title.insert(0, temp_except[0])
+                    self._search_link.insert(0, temp_except[1])
+                    self._search_number.insert(0, temp_except[2])
 
                     if hdline and (self.is_major == False):
-                        self._except_subject.append(self._search_subject[j])
+                        self._search_subject.insert(0, temp_except[3])
 
-        for i in range(0, len(self._except_title)):
-            try:
-                self._search_title.remove(self._except_title[i])
-                self._search_link.remove(self._except_link[i])
-                self._search_number.remove(self._except_number[i])
+                    except_index += 1
+
+                is_exclude = False
+
+            if except_index:
+                del self._search_title[0:except_index]
+                del self._search_link[0:except_index]
+                del self._search_number[0:except_index]
 
                 if hdline and (self.is_major == False):
-                    self._search_subject.remove(self._except_subject[i])
-            except ValueError as e:
-                if str(e) == 'list.remove(x): x not in list': # Pass when that error happens. Caused by duplicated elements of self._except_subject
-                    pass
-                else:
-                    raise
-            self.finished.emit('키워드 필터링 작업 중 입니다. (%s)' % len(self._search_title))
+                    del self._search_subject[0:except_index]
 
         # If subject words exist, (Only works on Minor gallery with subject & title)
         # Remove elements that don't include search subject keywords from lists
