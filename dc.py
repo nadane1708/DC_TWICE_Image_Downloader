@@ -227,11 +227,6 @@ class Worker(QObject):
         self._search_number = []
         self._search_subject = []
 
-        self._except_title = []
-        self._except_link = []
-        self._except_number = []
-        self._except_subject = []
-
         self._page_end = 0
             
         idx = list_[0]
@@ -475,11 +470,11 @@ class retryWorker(QObject):
                     img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._image_header)
                     file.write(img.content)
                     file.close()
-                self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php')])
+                self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
             except Exception as E:
                 file.close()
                 print('download image \n %s' % str(E))
-                self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php')])
+                self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
                 return
         else:
             try:
@@ -487,11 +482,11 @@ class retryWorker(QObject):
                     img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._image_header)
                     file.write(img.content)
                     file.close()
-                self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php')])
+                self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
             except Exception as E:
                 file.close()
                 print('download image \n %s' % str(E))
-                self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php')])
+                self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
                 return
 
         # Sleep for avoiding traffic block; Change value as you wish.
