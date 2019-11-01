@@ -281,10 +281,10 @@ class Worker(QObject):
                 self.finished_err.emit(['2', E])
                 return
 
-        img_tag = taSoup.find("div", {"class": "wp-caption aligncenter"}).find_all('img')
+        caption_tag = taSoup.find_all("div", {"class": "wp-caption aligncenter"})
 
-        for i in range(0, len(img_tag)):
-            img_url = img_tag[i].get('srcset').split(',')[-1]
+        for i in range(0, len(caption_tag)):
+            img_url = caption_tag[i].find('img').get('srcset').split(',')[-1]
             img_url = re.sub(" \d+w", "", img_url)
             if img_url is None: # No image tag
                 continue
