@@ -17,6 +17,8 @@ class MyWindow(QMainWindow, form_class, QObject):
     re_main_signal = pyqtSignal(list)
     nati_main_signal = pyqtSignal(list)
     sns_main_signal = pyqtSignal(list)
+    sns_main_signal_2 = pyqtSignal(list)
+    sns_main_signal_3 = pyqtSignal(list)
 
     def __init__(self):
         super().__init__()
@@ -48,6 +50,14 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.snsworker_thread = QThread()
         self.snsworker.moveToThread(self.snsworker_thread)
 
+        self.snsworker_2 = sns.Worker_2()
+        self.snsworker_thread_2 = QThread()
+        self.snsworker_2.moveToThread(self.snsworker_thread_2)
+
+        self.snsworker_3 = sns.Worker_3()
+        self.snsworker_thread_3 = QThread()
+        self.snsworker_3.moveToThread(self.snsworker_thread_3)
+
         # Connecting Signals
         self._connectSignals()
 
@@ -63,7 +73,8 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.openPath.clicked.connect(self.btn_openpath)
         self.openPath_2.clicked.connect(self.btn_openpath_2)
         self.insta_allOpenPath.clicked.connect(self.btn_openpath_SNS_1)
-        self.insta_segOpenPath.clicked.connect(self.btn_openpath_SNS_2)
+        self.twitt_allOpenPath.clicked.connect(self.btn_openpath_SNS_2)
+        self.insta_segOpenPath.clicked.connect(self.btn_openpath_SNS_3)
 
         # StatusBar
         self.statusBar = QStatusBar(self)
@@ -129,8 +140,10 @@ class MyWindow(QMainWindow, form_class, QObject):
                 self.editPath_2.setText(parser.get('Preset', 'path_2'))
                 self.insta_allFolderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt_3'))))
                 self.insta_allEditPath.setText(parser.get('Preset', 'path_3'))
-                self.insta_segFolderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt_4'))))
-                self.insta_segEditPath.setText(parser.get('Preset', 'path_4'))
+                self.twitt_allFolderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt_4'))))
+                self.twitt_allEditPath.setText(parser.get('Preset', 'path_4'))
+                self.insta_segFolderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt_5'))))
+                self.insta_segEditPath.setText(parser.get('Preset', 'path_5'))
             except Exception as E:
                 self.eventHandling(['2', E])
 
@@ -153,6 +166,10 @@ class MyWindow(QMainWindow, form_class, QObject):
 
     def btn_openpath_SNS_2(self):
         fname = QFileDialog.getExistingDirectory(self)
+        self.twitt_allEditPath.setText('%s\\' % os.path.normpath(fname))
+
+    def btn_openpath_SNS_3(self):
+        fname = QFileDialog.getExistingDirectory(self)
         self.insta_segEditPath.setText('%s\\' % os.path.normpath(fname))
 
     def _connectSignals(self):
@@ -160,6 +177,7 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.downloadCancel.clicked.connect(self.forceWorkerReset)
         self.downloadCancel_2.clicked.connect(self.forceWorkerReset)
         self.insta_allCancel.clicked.connect(self.forceWorkerReset)
+        self.twitt_allCancel.clicked.connect(self.forceWorkerReset)
         self.insta_segCancel.clicked.connect(self.forceWorkerReset)
 
         # Connect worker's pyqtSignal to pyqtSlot
@@ -175,6 +193,12 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.snsworker.finished.connect(self.updateStatusBar)
         self.snsworker.finished_err.connect(self.eventHandling)
 
+        self.snsworker_2.finished.connect(self.updateStatusBar)
+        self.snsworker_2.finished_err.connect(self.eventHandling)
+
+        self.snsworker_3.finished.connect(self.updateStatusBar)
+        self.snsworker_3.finished_err.connect(self.eventHandling)
+
         # Solved parameter problem for QT connect: https://stackoverflow.com/questions/23317195/pyqt-movetothread-does-not-work-when-using-partial-for-slot
         self.main_signal.connect(self.worker.main)
         self.downloadImg.clicked.connect(self.transmit_content)
@@ -187,7 +211,12 @@ class MyWindow(QMainWindow, form_class, QObject):
 
         self.sns_main_signal.connect(self.snsworker.main)
         self.insta_allDownload.clicked.connect(self.btn_downloadSNS_1)
-        self.insta_segDownload.clicked.connect(self.btn_downloadSNS_2)
+
+        self.sns_main_signal_2.connect(self.snsworker_2.main)
+        self.twitt_allDownload.clicked.connect(self.btn_downloadSNS_2)
+
+        self.sns_main_signal_3.connect(self.snsworker_3.main)
+        self.insta_segDownload.clicked.connect(self.btn_downloadSNS_3)
 
     def forceWorkerReset(self, var=False):
         status = True
@@ -221,6 +250,18 @@ class MyWindow(QMainWindow, form_class, QObject):
                 self.statusBar.showMessage('다운로드를 취소하였습니다.')
             self.snsworker_thread.terminate()
             self.snsworker_thread.wait()
+
+        if self.snsworker_thread_2.isRunning():
+            if status:
+                self.statusBar.showMessage('다운로드를 취소하였습니다.')
+            self.snsworker_thread_2.terminate()
+            self.snsworker_thread_2.wait()
+
+        if self.snsworker_thread_3.isRunning():
+            if status:
+                self.statusBar.showMessage('다운로드를 취소하였습니다.')
+            self.snsworker_thread_3.terminate()
+            self.snsworker_thread_3.wait()
 
     def transmit_content(self):
         self.forceWorkerReset(True)
@@ -301,7 +342,6 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.snsworker_thread.start()
 
         sns_list = [
-            1,
             self.insta_userID.text(),
             self.insta_allFolderSeparate.isChecked(),
             self.insta_allEditPath.text()
@@ -311,16 +351,28 @@ class MyWindow(QMainWindow, form_class, QObject):
 
     def btn_downloadSNS_2(self):
         self.forceWorkerReset(True)
-        self.snsworker_thread.start()
+        self.snsworker_thread_2.start()
 
         sns_list = [
-            2,
+            self.twitt_userID.text(),
+            self.twitt_allRetweet.isChecked(),
+            self.twitt_allFolderSeparate.isChecked(),
+            self.twitt_allEditPath.text()
+        ]
+
+        self.sns_main_signal_2.emit(sns_list)
+
+    def btn_downloadSNS_3(self):
+        self.forceWorkerReset(True)
+        self.snsworker_thread_3.start()
+
+        sns_list = [
             self.insta_url.toPlainText(),
             self.insta_segFolderSeparate.isChecked(),
             self.insta_segEditPath.text()
         ]
 
-        self.sns_main_signal.emit(sns_list)
+        self.sns_main_signal_3.emit(sns_list)
 
     @pyqtSlot(str)
     def updateStatusBar(self, signal):
@@ -381,7 +433,7 @@ class MyWindow(QMainWindow, form_class, QObject):
                 self.treeChild_2 = []
             elif event_list[1] == '1':
                 self.treeChild_2.append([event_list[2], event_list[3], event_list[4]])
-        elif event_list[0] == '5': # Update Instagram download datas
+        elif event_list[0] == '5': # Update Instagram / Twitter download datas
             sns_pixmap = QPixmap()
             sns_pixmap.loadFromData(event_list[1])
             sns_pixmap = sns_pixmap.scaledToHeight(341)
@@ -406,8 +458,11 @@ class MyWindow(QMainWindow, form_class, QObject):
             'path_2': self.editPath_2.text(),
             'sprt_3': int(self.insta_allFolderSeparate.isChecked()),
             'path_3': self.insta_allEditPath.text(),
-            'sprt_4': int(self.insta_segFolderSeparate.isChecked()),
-            'path_4': self.insta_segEditPath.text()
+            'retwt': int(self.twitt_allRetweet.isChecked()),
+            'sprt_4': int(self.twitt_allFolderSeparate.isChecked()),
+            'path_4': self.twitt_allEditPath.text(),
+            'sprt_5': int(self.insta_segFolderSeparate.isChecked()),
+            'path_5': self.insta_segEditPath.text()
         }
 
         try:
@@ -424,3 +479,4 @@ if __name__ == "__main__":
     app.exec_()
     print('terminate normally')
     sys.exit()
+    
