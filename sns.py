@@ -9,6 +9,7 @@ from lxml import html
 import urllib.parse as urlparse
 
 
+# Instagram Download
 class Worker(QObject):
     finished = pyqtSignal(str)
     finished_err = pyqtSignal(list)
@@ -19,11 +20,11 @@ class Worker(QObject):
         self._header = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36'
         }
 
     @pyqtSlot()
-    def sns_allDownload(self, user, sprt, path): # Download whole contents of Instagram User Page
+    def inst_allDownload(self, user, sprt, path): # Download whole contents of Instagram User Page
         try:
             self.finished.emit('해당 ID의 계정을 확인 중 입니다.')
             res = req.get('https://www.instagram.com/' + user + '/?__a=1', headers=self._header)
@@ -102,7 +103,6 @@ class Worker(QObject):
             self.finished_err.emit(['2', E])
             return
 
-
         if not os.path.isdir(path):
             try:
                 os.makedirs(path)
@@ -153,12 +153,281 @@ class Worker(QObject):
                         return
 
                 QThread.msleep(500)
-                index += 1
-
+            
+            index += 1
             QThread.msleep(700)
 
+    @pyqtSlot(list)
+    def main(self, list_):
+        self.finished.emit('다운로드 작업을 시작합니다.')
+        QThread.msleep(1000)
+
+        self.inst_allDownload(list_[0], list_[1], list_[2])
+
+        self.finished.emit('다운로드 작업을 완료하였습니다.')
+
+
+# Twitter Download
+class Worker_2(QObject):
+    finished = pyqtSignal(str)
+    finished_err = pyqtSignal(list)
+
+    def __init__(self, parent=None):
+        super(self.__class__, self).__init__(parent)
+
+        self._header = {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36'
+        }
+        self._video_header = {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
+            'authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA' 
+        }
+
+    # I have referred to the code at following address: https://github.com/dc-koromo/koromo-copy/blob/master/Koromo_Copy.Framework/Extractor/TwitterExtractor.cs
+    # Thanks to koromo
     @pyqtSlot()
-    def sns_segDownload(self, url, sprt, path, status): # Download contents of Instagram Page
+    def tw_allDownload(self, user, sprt, path):
+        media_list = []
+
+        try:
+            self.finished.emit('해당 ID의 계정을 확인 중 입니다.')
+            res = req.get('https://twitter.com/%s' % user, headers=self._header)
+        except Exception as E:
+            self.finished_err.emit(['2', E])
+            return
+
+        docs = html.fromstring(res.content)
+        try:
+            min_pos = docs.xpath('//*[@id="timeline"]/div/@data-min-position')[0]
+        except Exception as E:
+            if 'out of range' in str(E):
+                self.finished_err.emit(['1', '검색하신 페이지를 확인할 수 없습니다.', '해당 주소를 확인하고 다시 시도해주시기 바랍니다.'])
+                return
+            else:
+                self.finished_err.emit(['2', E])
+                return
+
+        tweets = docs.xpath("//*/li[@data-item-type='tweet']")
+        if tweets == []:
+            self.finished_err.emit(['1', '검색하신 페이지를 확인할 수 없습니다.', '해당 주소를 확인하고 다시 시도해주시기 바랍니다.'])
+            return
+
+        self.finished.emit('해당 계정의 글을 불러옵니다. (%s)' % len(media_list))
+
+        # First page
+        for i in tweets:
+            parse_list = []
+            tweet_user = i.xpath(".//div[1]/@data-screen-name")[0]
+            tweet_id = i.xpath(".//div[1]/@data-tweet-id")[0]
+            has_img = i.xpath(".//*[@class='AdaptiveMedia-container']//img/@src")
+            has_video = i.xpath(".//*[@class='AdaptiveMediaOuterContainer']//div[@class='AdaptiveMedia-video']")
+
+            if has_img:
+                parse_list.append(tweet_user)
+                parse_list.append(tweet_id)
+                parse_list.append(has_img)
+            elif has_video:
+                parse_list.append(tweet_user)
+                parse_list.append(tweet_id)
+
+                try:
+                    video_json = req.get('https://api.twitter.com/1.1/statuses/show.json?include_profile_interstitial_type=1&include_blocking=1&include_blocked_by=1&include_followed_by=1&include_want_retweets=1&include_mute_edge=1&include_can_dm=1&skip_status=1&cards_platform=Web-12&include_cards=1&include_ext_alt_text=true&include_reply_count=1&tweet_mode=extended&trim_user=false&include_ext_media_color=true&id=%s' % tweet_id, headers=self._video_header)
+                except Exception as E:
+                    self.finished_err.emit(['2', E])
+                    return
+                video_json = video_json.json()
+                variants = video_json['extended_entities']['media'][0]['video_info']['variants']
+                if isinstance(variants, list):
+                    for i in variants:
+                        if 'mp4' in i['content_type']:
+                            parse_list.append(i['url'])
+                            break
+                else:
+                    parse_list.append(variants[0]['url'])
+
+                QThread.msleep(1000)
+
+            if not parse_list == []:
+                media_list.append(parse_list)
+
+            self.finished.emit('해당 계정의 글을 불러옵니다. (%s)' % len(media_list))
+
+        # Loop for pages after first. Second page, Third page, and so on.
+        while(True):
+            api_url = 'https://twitter.com/i/profiles/show/%s/timeline/tweets?include_available_features=1&include_entities=1&max_position=%s&reset_error_state=false' % (user, min_pos)
+
+            try:
+                api_json = req.get(api_url, headers=self._header).json()
+            except Exception as E:
+                self.finished_err.emit(['2', E])
+                return
+
+            min_pos = api_json['min_position']
+            docs = html.fromstring(api_json['items_html'])
+            tweets = docs.xpath("//*/li[@data-item-type='tweet']")
+
+            if tweets == []:
+                print('None tweets array')
+                break
+
+            for i in tweets:
+                parse_list = []
+                tweet_user = i.xpath(".//div[1]/@data-screen-name")[0]
+                tweet_id = i.xpath(".//div[1]/@data-tweet-id")[0]
+                has_img = i.xpath(".//*[@class='AdaptiveMediaOuterContainer']//img/@src")
+                has_video = i.xpath(".//*[@class='AdaptiveMediaOuterContainer']//div[@class='AdaptiveMedia-video']")
+
+                if has_img: # multiple images
+                    parse_list.append(tweet_user)
+                    parse_list.append(tweet_id)
+                    parse_list.append(has_img)    
+                elif has_video:
+                    parse_list.append(tweet_user)
+                    parse_list.append(tweet_id)
+
+                    try:
+                        video_json = req.get('https://api.twitter.com/1.1/statuses/show.json?include_profile_interstitial_type=1&include_blocking=1&include_blocked_by=1&include_followed_by=1&include_want_retweets=1&include_mute_edge=1&include_can_dm=1&skip_status=1&cards_platform=Web-12&include_cards=1&include_ext_alt_text=true&include_reply_count=1&tweet_mode=extended&trim_user=false&include_ext_media_color=true&id=%s' % tweet_id, headers=self._video_header)
+                        video_json = video_json.json()
+                    except Exception as E:
+                        self.finished_err.emit(['2', E])
+                        return
+
+                    variants = video_json['extended_entities']['media'][0]['video_info']['variants']
+                    if isinstance(variants, list):
+                        for i in variants:
+                            if 'mp4' in i['content_type']:
+                                parse_list.append(i['url'])
+                                break
+                    else:
+                        parse_list.append(variants[0]['url'])
+
+                    QThread.msleep(500)
+
+                if not parse_list == []:
+                    media_list.append(parse_list)
+
+                self.finished.emit('해당 계정의 글을 불러옵니다. (%s)' % len(media_list))
+                QThread.msleep(500)
+
+            if not api_json['has_more_items']:
+                print('no more')
+                break
+
+        if not os.path.isdir(path):
+            try:
+                os.makedirs(path)
+            except Exception as E:
+                self.finished_err.emit(['2', E])
+                return
+
+        index = 1
+        for i in media_list:
+            if sprt:
+                if not os.path.isdir('%s%s' % (path, i[0] + '_' + i[1])):
+                    try:
+                        os.makedirs('%s%s' % (path, i[0] + '_' + i[1]))
+                    except Exception as E:
+                        print(str(E))
+                        return
+
+                if isinstance(i[2], list):
+                    for j in i[2]:
+                        self.finished.emit('다운로드 중 (%s/%s): %s' % (index, len(media_list), re.sub("\?tag=\d+", "", j.split('/')[-1])))
+                        try:
+                            with open('%s%s\\%s' % (path, i[0] + '_' + i[1], re.sub("\?tag=\d+", "", j.split('/')[-1])), "wb") as file:
+                                img = req.get(j + ':orig', headers=self._header)
+                                file.write(img.content)
+                                file.close()
+
+                                if re.sub("\?tag=\d+", "", j.split('/')[-1])[-4:] == '.jpg':
+                                    self.finished_err.emit(['5', img.content])
+                        except Exception as E:
+                            file.close()
+                            print(str(E))
+                            return
+                else:
+                    self.finished.emit('다운로드 중 (%s/%s): %s' % (index, len(media_list), re.sub("\?tag=\d+", "", i[2].split('/')[-1])))
+                    try:
+                        with open('%s%s\\%s' % (path, i[0] + '_' + i[1], re.sub("\?tag=\d+", "", i[2].split('/')[-1])), "wb") as file:
+                            img = req.get(i[2] + ':orig', headers=self._header)
+                            file.write(img.content)
+                            file.close()
+
+                            if re.sub("\?tag=\d+", "", i[2].split('/')[-1])[-4:] == '.jpg':
+                                self.finished_err.emit(['5', img.content])
+                    except Exception as E:
+                        file.close()
+                        print(str(E))
+                        return
+            else:
+                if isinstance(i[2], list):
+                    for j in i[2]:
+                        self.finished.emit('다운로드 중 (%s/%s): %s' % (index, len(media_list), re.sub("\?tag=\d+", "", j.split('/')[-1])))
+                        try:
+                            with open('%s%s' % (path, re.sub("\?tag=\d+", "", j.split('/')[-1])), "wb") as file:
+                                img = req.get(j + ':orig', headers=self._header)
+                                file.write(img.content)
+                                file.close()
+
+                                if re.sub("\?tag=\d+", "", j.split('/')[-1])[-4:] == '.jpg':
+                                    self.finished_err.emit(['5', img.content])
+                        except Exception as E:
+                            file.close()
+                            print(str(E))
+                            return
+                else:
+                    self.finished.emit('다운로드 중 (%s/%s): %s' % (index, len(media_list), re.sub("\?tag=\d+", "", i[2].split('/')[-1])))
+                    try:
+                        with open('%s%s' % (path, re.sub("\?tag=\d+", "", i[2].split('/')[-1])), "wb") as file:
+                            img = req.get(i[2] + ':orig', headers=self._header)
+                            file.write(img.content)
+                            file.close()
+
+                            if re.sub("\?tag=\d+", "", i[2].split('/')[-1])[-4:] == '.jpg':
+                                self.finished_err.emit(['5', img.content])
+                    except Exception as E:
+                        file.close()
+                        print(str(E))
+                        return
+
+            index += 1
+
+    @pyqtSlot(list)
+    def main(self, list_):
+        self.finished.emit('다운로드 작업을 시작합니다.')
+
+        QThread.msleep(1000)
+
+        self.tw_allDownload(list_[0], list_[1], list_[2])
+
+        self.finished.emit('다운로드 작업을 완료하였습니다.')
+
+
+# Instagram / Twitter Download Partially
+class Worker_3(QObject):
+    finished = pyqtSignal(str)
+    finished_err = pyqtSignal(list)
+
+    def __init__(self, parent=None):
+        super(self.__class__, self).__init__(parent)
+        self._header = {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36'
+        }
+        self._video_header = {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
+            'authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA' 
+        }
+
+    @pyqtSlot()
+    def inst_segDownload(self, url, sprt, path, status): # Download contents of Instagram Page
         try:
             if url.split('/')[-3] != 'p':
                 url = url + '/'
@@ -240,21 +509,138 @@ class Worker(QObject):
 
             QThread.msleep(700)
 
+    @pyqtSlot()
+    def tw_segDownload(self, url, sprt, path, status):
+        try:
+            res = req.get(url, headers=self._header)
+        except Exception as E:
+            self.finished_err.emit(['2', E])
+            return
+
+        docs = html.fromstring(res.content)
+        try:
+            tweet_html = docs.xpath(".//*[@class='permalink-inner permalink-tweet-container']")[0]
+        except Exception as E:
+            if 'out of range' in str(E):
+                self.finished_err.emit(['1', '검색하신 페이지를 확인할 수 없습니다.', '해당 주소를 확인하고 다시 시도해주시기 바랍니다.'])
+                return
+            else:
+                self.finished_err.emit(['2', E])
+                return
+
+        tweet_user = tweet_html.xpath(".//div[1]/@data-screen-name")[0]
+        tweet_id = tweet_html.xpath(".//div[1]/@data-tweet-id")[0]
+        has_img = tweet_html.xpath(".//*[@class='AdaptiveMedia-container']//img/@src")
+        has_video = tweet_html.xpath(".//*[@class='AdaptiveMediaOuterContainer']//div[@class='AdaptiveMedia-video']")
+
+        if has_img:
+            src = has_img
+        elif has_video:
+            src = []
+
+            try:
+                video_json = req.get('https://api.twitter.com/1.1/statuses/show.json?include_profile_interstitial_type=1&include_blocking=1&include_blocked_by=1&include_followed_by=1&include_want_retweets=1&include_mute_edge=1&include_can_dm=1&skip_status=1&cards_platform=Web-12&include_cards=1&include_ext_alt_text=true&include_reply_count=1&tweet_mode=extended&trim_user=false&include_ext_media_color=true&id=%s' % tweet_id, headers=self._video_header)
+                video_json = video_json.json()
+            except Exception as E:
+                self.finished_err.emit(['2', E])
+                return
+
+            variants = video_json['extended_entities']['media'][0]['video_info']['variants']
+            if isinstance(variants, list):
+                for i in variants:
+                    if 'mp4' in i['content_type']:
+                        src.append(i['url'])
+                        break
+            else:
+                src.append(variants[0]['url'])
+
+        if not os.path.isdir(path):
+            try:
+                os.makedirs(path)
+            except Exception as E:
+                self.finished_err.emit(['2', E])
+                return
+
+        if sprt:
+            if not os.path.isdir('%s%s' % (path, tweet_user + '_' + tweet_id)):
+                try:
+                    os.makedirs('%s%s' % (path, tweet_user + '_' + tweet_id))
+                except Exception as E:
+                    print(str(E))
+                    return
+
+            if isinstance(src, list):
+                for i in src:
+                    self.finished.emit('다운로드 중 (%s): %s' % (status, re.sub("\?tag=\d+", "", i.split('/')[-1])))
+                    try:
+                        with open('%s%s\\%s' % (path, tweet_user + '_' + tweet_id, re.sub("\?tag=\d+", "", i.split('/')[-1])), "wb") as file:
+                            img = req.get(i + ':orig', headers=self._header)
+                            file.write(img.content)
+                            file.close()
+
+                            if re.sub("\?tag=\d+", "", i.split('/')[-1])[-4:] == '.jpg':
+                                self.finished_err.emit(['5', img.content])
+                    except Exception as E:
+                        file.close()
+                        print(str(E))
+                        return
+            else:
+                self.finished.emit('다운로드 중 (%s): %s' % (status, re.sub("\?tag=\d+", "", src.split('/')[-1])))
+                try:
+                    with open('%s%s\\%s' % (path, tweet_user + '_' + tweet_id, re.sub("\?tag=\d+", "", src.split('/')[-1])), "wb") as file:
+                        img = req.get(src + ':orig', headers=self._header)
+                        file.write(img.content)
+                        file.close()
+
+                        if re.sub("\?tag=\d+", "", src.split('/')[-1])[-4:] == '.jpg':
+                            self.finished_err.emit(['5', img.content])
+                except Exception as E:
+                    file.close()
+                    print(str(E))
+                    return
+        else:
+            if isinstance(src, list):
+                for i in src:
+                    self.finished.emit('다운로드 중 (%s): %s' % (status, re.sub("\?tag=\d+", "", i.split('/')[-1])))
+                    try:
+                        with open('%s%s' % (path, re.sub("\?tag=\d+", "", i.split('/')[-1])), "wb") as file:
+                            img = req.get(i + ':orig', headers=self._header)
+                            file.write(img.content)
+                            file.close()
+
+                            if re.sub("\?tag=\d+", "", i.split('/')[-1])[-4:] == '.jpg':
+                                self.finished_err.emit(['5', img.content])
+                    except Exception as E:
+                        file.close()
+                        print(str(E))
+                        return
+            else:
+                self.finished.emit('다운로드 중 (%s): %s' % (status, re.sub("\?tag=\d+", "", src.split('/')[-1])))
+                try:
+                    with open('%s%s' % (path, re.sub("\?tag=\d+", "", src.split('/')[-1])), "wb") as file:
+                        img = req.get(src + ':orig', headers=self._header)
+                        file.write(img.content)
+                        file.close()
+
+                        if re.sub("\?tag=\d+", "", src.split('/')[-1])[-4:] == '.jpg':
+                            self.finished_err.emit(['5', img.content])
+                except Exception as E:
+                    file.close()
+                    print(str(E))
+                    return
+
     @pyqtSlot(list)
     def main(self, list_):
         self.finished.emit('다운로드 작업을 시작합니다.')
-
         QThread.msleep(1000)
 
-        if list_[0] == 1:
-            self.sns_allDownload(list_[1], list_[2], list_[3])
-        elif list_[0] == 2:
-            search_link = []
-            search_link = list_[1].split('\n')
+        search_link = []
+        search_link = list_[0].split('\n')
 
-            for i in range(0, len(search_link)):
-                self.sns_segDownload(search_link[i], list_[2], list_[3], '%s/%s' % (i + 1, len(search_link)))
-
-                QThread.msleep(1000)
+        for i in range(0, len(search_link)):
+            if 'instagram.com' in search_link[i]:
+                self.inst_segDownload(search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(search_link)))
+            elif 'twitter.com' in search_link[i]:
+                self.tw_segDownload(search_link[i], list_[1], list_[2], '%s/%s' % (i + 1, len(search_link)))
 
         self.finished.emit('다운로드 작업을 완료하였습니다.')
