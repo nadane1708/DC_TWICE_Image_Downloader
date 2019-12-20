@@ -190,7 +190,7 @@ class Worker_2(QObject):
     # I have referred to the code at following address: https://github.com/dc-koromo/koromo-copy/blob/master/Koromo_Copy.Framework/Extractor/TwitterExtractor.cs
     # Thanks to koromo
     @pyqtSlot()
-    def tw_allDownload(self, user, sprt, path):
+    def tw_allDownload(self, user, retwt, sprt, path):
         media_list = []
 
         try:
@@ -226,6 +226,10 @@ class Worker_2(QObject):
             has_img = i.xpath(".//*[@class='AdaptiveMedia-container']//img/@src")
             has_video = i.xpath(".//*[@class='AdaptiveMediaOuterContainer']//div[@class='AdaptiveMedia-video']")
 
+            if not retwt:
+                if not user == tweet_user:
+                    continue
+
             if has_img:
                 parse_list.append(tweet_user)
                 parse_list.append(tweet_id)
@@ -258,7 +262,10 @@ class Worker_2(QObject):
 
         # Loop for pages after first. Second page, Third page, and so on.
         while(True):
-            api_url = 'https://twitter.com/i/profiles/show/%s/timeline/tweets?include_available_features=1&include_entities=1&max_position=%s&reset_error_state=false' % (user, min_pos)
+            if retwt:
+                api_url = 'https://twitter.com/i/profiles/show/%s/timeline/tweets?include_available_features=1&include_entities=1&max_position=%s&reset_error_state=false' % (user, min_pos)
+            else:
+                api_url = 'https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1&include_entities=1&max_position=%s&reset_error_state=false' % (user, min_pos)
 
             try:
                 api_json = req.get(api_url, headers=self._header).json()
@@ -402,7 +409,7 @@ class Worker_2(QObject):
 
         QThread.msleep(1000)
 
-        self.tw_allDownload(list_[0], list_[1], list_[2])
+        self.tw_allDownload(list_[0], list_[1], list_[2], list_[3])
 
         self.finished.emit('다운로드 작업을 완료하였습니다.')
 
