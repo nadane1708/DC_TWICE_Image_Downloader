@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import os
 import time
 import re
+import platform
 
 
 class Worker(QObject):
@@ -187,7 +188,11 @@ class Worker(QObject):
                     self.finished_err.emit(['2', E])
                     return
             try:
-                with open('%s%s\\%s' % (directory, title, filename), "wb") as file:
+                if platform.system() == 'Windows':
+                    file_dir = '%s%s\\%s' % (directory, title, filename)
+                else:
+                    file_dir = '%s%s/%s' % (directory, title, filename)
+                with open(file_dir, "wb") as file:
                     img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._image_header)
                     file.write(img.content)
                     file.close()
@@ -466,7 +471,11 @@ class retryWorker(QObject):
                     self.finished_err.emit(['2', E])
                     return
             try:
-                with open('%s%s\\%s' % (directory, title, filename), "wb") as file:
+                if platform.system() == 'Windows':
+                    file_dir = '%s%s\\%s' % (directory, title, filename)
+                else:
+                    file_dir = '%s%s/%s' % (directory, title, filename)
+                with open(file_dir, "wb") as file:
                     img = req.get(url.replace('download.php', 'viewimage.php'), headers=self._image_header)
                     file.write(img.content)
                     file.close()
