@@ -409,9 +409,13 @@ class MyWindow(QMainWindow, form_class, QObject):
         elif event_list[0] == '3': # Update Treeview datas
             if event_list[1] == '0':
                 self.treeParent = QTreeWidgetItem([event_list[2], event_list[3], event_list[4], event_list[5]])
+                if '실패' in event_list[3]:
+                        self.treeParent.setBackground(1, QColor('yellow')) # Set background color to yellow when page loading failed
                 if not self.treeChild == []:
                     for i in self.treeChild:
                         self.treeParent.addChild(QTreeWidgetItem(i))
+                        if '실패' in i[1]:
+                            self.treeParent.setBackground(1, QColor('yellow')) # Set background color to yellow when image loading failed
                 if not event_list[5] is None:
                     self.treeParent.setToolTip(0, event_list[5]) # Set tooltips for previewing texts of the posts
                 self.trWidget.addTopLevelItem(self.treeParent)
@@ -426,8 +430,12 @@ class MyWindow(QMainWindow, form_class, QObject):
         elif event_list[0] == '4': # Update Treeview datas for blog / news download
             if event_list[1] == '0':
                 self.treeParent_2 = QTreeWidgetItem([event_list[2], event_list[3], event_list[4]])
+                if '실패' in event_list[3]:
+                        self.treeParent_2.setBackground(1, QColor('yellow'))
                 if not self.treeChild_2 == []:
                     for i in self.treeChild_2:
+                        if '실패' in i[1]:
+                            self.treeParent_2.setBackground(1, QColor('yellow'))
                         self.treeParent_2.addChild(QTreeWidgetItem(i))
                 self.trWidget_2.addTopLevelItem(self.treeParent_2)
                 self.treeChild_2 = []
