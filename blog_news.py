@@ -5,6 +5,7 @@ import os
 import time
 import re
 import urllib.parse as urlparse
+import platform
 
 
 class Worker(QObject):
@@ -73,7 +74,11 @@ class Worker(QObject):
                         return
 
                 try:
-                    with open('%s%s\\%s' % (path, na_title, img_name), "wb") as file:
+                    if platform.system() == 'Windows':
+                        file_dir = '%s%s\\%s' % (path, na_title, img_name)
+                    else:
+                        file_dir = '%s%s/%s' % (path, na_title, img_name)
+                    with open(file_dir, "wb") as file:
                         img = req.get(img_url, headers=self._header)
                         file.write(img.content)
                         file.close()
@@ -152,7 +157,11 @@ class Worker(QObject):
                         return
 
                 try:
-                    with open('%s%s\\%s' % (path, top_title, img_name), "wb") as file:
+                    if platform.system() == 'Windows':
+                        file_dir = '%s%s\\%s' % (path, top_title, img_name)
+                    else:
+                        file_dir = '%s%s/%s' % (path, top_title, img_name)
+                    with open(file_dir, "wb") as file:
                         img = req.get(img_url, headers=self._header)
                         file.write(img.content)
                         file.close()
@@ -226,7 +235,11 @@ class Worker(QObject):
                         return
 
                 try:
-                    with open('%s%s\\%s' % (path, dp_title, img_name), "wb") as file:
+                    if platform.system() == 'Windows':
+                        file_dir = '%s%s\\%s' % (path, dp_title, img_name)
+                    else:
+                        file_dir = '%s%s/%s' % (path, dp_title, img_name)
+                    with open(file_dir, "wb") as file:
                         img = req.get(img_url, headers=self._header)
                         file.write(img.content)
                         file.close()
@@ -303,7 +316,11 @@ class Worker(QObject):
                         return
 
                 try:
-                    with open('%s%s\\%s' % (path, ta_title, img_name), "wb") as file:
+                    if platform.system() == 'Windows':
+                        file_dir = '%s%s\\%s' % (path, ta_title, img_name)
+                    else:
+                        file_dir = '%s%s/%s' % (path, ta_title, img_name)
+                    with open(file_dir, "wb") as file:
                         img = req.get(img_url, headers=self._header)
                         file.write(img.content)
                         file.close()
@@ -377,7 +394,11 @@ class Worker(QObject):
                         return
 
                 try:
-                    with open('%s%s\\%s' % (path, n1_title, img_name), "wb") as file:
+                    if platform.system() == 'Windows':
+                        file_dir = '%s%s\\%s' % (path, n1_title, img_name)
+                    else:
+                        file_dir = '%s%s/%s' % (path, n1_title, img_name)
+                    with open(file_dir, "wb") as file:
                         img = req.get(img_url, headers=self._header)
                         file.write(img.content)
                         file.close()
@@ -451,7 +472,11 @@ class Worker(QObject):
                         return
 
                 try:
-                    with open('%s%s\\%s' % (path, os_title, img_name), "wb") as file:
+                    if platform.system() == 'Windows':
+                        file_dir = '%s%s\\%s' % (path, os_title, img_name)
+                    else:
+                        file_dir = '%s%s/%s' % (path, os_title, img_name)
+                    with open(file_dir, "wb") as file:
                         img = req.get(img_url, headers=self._header)
                         file.write(img.content)
                         file.close()
@@ -527,7 +552,11 @@ class Worker(QObject):
                         return
 
                 try:
-                    with open('%s%s\\%s' % (path, sdn_title, img_name), "wb") as file:
+                    if platform.system() == 'Windows':
+                        file_dir = '%s%s\\%s' % (path, sdn_title, img_name)
+                    else:
+                        file_dir = '%s%s/%s' % (path, sdn_title, img_name)
+                    with open(file_dir, "wb") as file:
                         img = req.get(img_url, headers=self._header)
                         file.write(img.content)
                         file.close()
@@ -612,7 +641,11 @@ class Worker(QObject):
                         return
 
                 try:
-                    with open('%s%s\\%s' % (path, ti_title, img_name), "wb") as file:
+                    if platform.system() == 'Windows':
+                        file_dir = '%s%s\\%s' % (path, ti_title, img_name)
+                    else:
+                        file_dir = '%s%s/%s' % (path, ti_title, img_name)
+                    with open(file_dir, "wb") as file:
                         img = req.get(img_url, headers=self._header)
                         file.write(img.content)
                         file.close()
