@@ -7,6 +7,7 @@ import re
 import json
 from lxml import html
 import urllib.parse as urlparse
+import platform
 
 
 # Instagram Download
@@ -127,7 +128,11 @@ class Worker(QObject):
                             return
 
                     try:
-                        with open('%s%s\\%s' % (path, i, img_name), "wb") as file:
+                        if platform.system() == 'Windows':
+                            file_dir = '%s%s\\%s' % (path, i, img_name)
+                        else:
+                            file_dir = '%s%s/%s' % (path, i, img_name)
+                        with open(file_dir, "wb") as file:
                             img = req.get(k, headers=self._header)
                             file.write(img.content)
                             file.close()
@@ -345,7 +350,11 @@ class Worker_2(QObject):
                     for j in i[2]:
                         self.finished.emit('다운로드 중 (%s/%s): %s' % (index, len(media_list), re.sub("\?tag=\d+", "", j.split('/')[-1])))
                         try:
-                            with open('%s%s\\%s' % (path, i[0] + '_' + i[1], re.sub("\?tag=\d+", "", j.split('/')[-1])), "wb") as file:
+                            if platform.system() == 'Windows':
+                                file_dir = '%s%s\\%s' % (path, i[0] + '_' + i[1], re.sub("\?tag=\d+", "", j.split('/')[-1]))
+                            else:
+                                file_dir = '%s%s/%s' % (path, i[0] + '_' + i[1], re.sub("\?tag=\d+", "", j.split('/')[-1]))
+                            with open(file_dir, "wb") as file:
                                 img = req.get(j + ':orig', headers=self._header)
                                 file.write(img.content)
                                 file.close()
@@ -359,7 +368,11 @@ class Worker_2(QObject):
                 else:
                     self.finished.emit('다운로드 중 (%s/%s): %s' % (index, len(media_list), re.sub("\?tag=\d+", "", i[2].split('/')[-1])))
                     try:
-                        with open('%s%s\\%s' % (path, i[0] + '_' + i[1], re.sub("\?tag=\d+", "", i[2].split('/')[-1])), "wb") as file:
+                        if platform.system() == 'Windows':
+                            file_dir = '%s%s\\%s' % (path, i[0] + '_' + i[1], re.sub("\?tag=\d+", "", i[2].split('/')[-1]))
+                        else:
+                            file_dir = '%s%s/%s' % (path, i[0] + '_' + i[1], re.sub("\?tag=\d+", "", i[2].split('/')[-1]))
+                        with open(file_dir, "wb") as file:
                             img = req.get(i[2] + ':orig', headers=self._header)
                             file.write(img.content)
                             file.close()
@@ -487,7 +500,11 @@ class Worker_3(QObject):
                             return
 
                     try:
-                        with open('%s%s\\%s' % (path, i, img_name), "wb") as file:
+                        if platform.system() == 'Windows':
+                            file_dir = '%s%s\\%s' % (path, i, img_name)
+                        else:
+                            file_dir = '%s%s/%s' % (path, i, img_name)
+                        with open(file_dir, "wb") as file:
                             img = req.get(k, headers=self._header)
                             file.write(img.content)
                             file.close()
@@ -580,7 +597,11 @@ class Worker_3(QObject):
                 for i in src:
                     self.finished.emit('다운로드 중 (%s): %s' % (status, re.sub("\?tag=\d+", "", i.split('/')[-1])))
                     try:
-                        with open('%s%s\\%s' % (path, tweet_user + '_' + tweet_id, re.sub("\?tag=\d+", "", i.split('/')[-1])), "wb") as file:
+                        if platform.system() == 'Windows':
+                            file_dir = '%s%s\\%s' % (path, tweet_user + '_' + tweet_id, re.sub("\?tag=\d+", "", i.split('/')[-1]))
+                        else:
+                            file_dir = '%s%s/%s' % (path, tweet_user + '_' + tweet_id, re.sub("\?tag=\d+", "", i.split('/')[-1]))
+                        with open(file_dir, "wb") as file:
                             img = req.get(i + ':orig', headers=self._header)
                             file.write(img.content)
                             file.close()
@@ -594,7 +615,11 @@ class Worker_3(QObject):
             else:
                 self.finished.emit('다운로드 중 (%s): %s' % (status, re.sub("\?tag=\d+", "", src.split('/')[-1])))
                 try:
-                    with open('%s%s\\%s' % (path, tweet_user + '_' + tweet_id, re.sub("\?tag=\d+", "", src.split('/')[-1])), "wb") as file:
+                    if platform.system() == 'Windows':
+                        file_dir = '%s%s\\%s' % (path, tweet_user + '_' + tweet_id, re.sub("\?tag=\d+", "", src.split('/')[-1]))
+                    else:
+                        file_dir = '%s%s/%s' % (path, tweet_user + '_' + tweet_id, re.sub("\?tag=\d+", "", src.split('/')[-1]))
+                    with open(file_dir, "wb") as file:
                         img = req.get(src + ':orig', headers=self._header)
                         file.write(img.content)
                         file.close()
