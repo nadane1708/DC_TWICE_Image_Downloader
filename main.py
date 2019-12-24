@@ -8,6 +8,7 @@ import dc
 import blog_news
 import sns
 import configparser
+import platform
 
 
 form_class = uic.loadUiType("./res/main.ui")[0]
@@ -155,23 +156,38 @@ class MyWindow(QMainWindow, form_class, QObject):
 
     def btn_openpath(self):
         fname = QFileDialog.getExistingDirectory(self)
-        self.editPath.setText('%s\\' % os.path.normpath(fname)) # os.path.normpath(path) --> Change "/" to "\" on Windows OS
+        if platform.system() == 'Windows':
+            self.editPath.setText('%s\\' % os.path.normpath(fname)) # os.path.normpath(path) --> Change "/" to "\" on Windows OS
+        else:
+            self.editPath.setText('%s/' % fname)
 
     def btn_openpath_2(self):
         fname = QFileDialog.getExistingDirectory(self)
-        self.editPath_2.setText('%s\\' % os.path.normpath(fname)) # os.path.normpath(path) --> Change "/" to "\" on Windows OS
+        if platform.system() == 'Windows':
+            self.editPath_2.setText('%s\\' % os.path.normpath(fname)) # os.path.normpath(path) --> Change "/" to "\" on Windows OS
+        else:
+            self.editPath_2.setText('%s/' % fname)
 
     def btn_openpath_SNS_1(self):
         fname = QFileDialog.getExistingDirectory(self)
-        self.insta_allEditPath.setText('%s\\' % os.path.normpath(fname))
+        if platform.system() == 'Windows':
+            self.insta_allEditPath.setText('%s\\' % os.path.normpath(fname))
+        else:
+            self.insta_allEditPath.setText('%s/' % fname)
 
     def btn_openpath_SNS_2(self):
         fname = QFileDialog.getExistingDirectory(self)
-        self.twitt_allEditPath.setText('%s\\' % os.path.normpath(fname))
+        if platform.system() == 'Windows':
+            self.twitt_allEditPath.setText('%s\\' % os.path.normpath(fname))
+        else:
+            self.twitt_allEditPath.setText('%s/' % fname)
 
     def btn_openpath_SNS_3(self):
         fname = QFileDialog.getExistingDirectory(self)
-        self.insta_segEditPath.setText('%s\\' % os.path.normpath(fname))
+        if platform.system() == 'Windows':
+            self.insta_segEditPath.setText('%s\\' % os.path.normpath(fname))
+        else:
+            self.insta_segEditPath.setText('%s/' % fname)
 
     def _connectSignals(self):
         
