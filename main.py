@@ -140,6 +140,7 @@ class MyWindow(QMainWindow, form_class, QObject):
                 self.editPath_2.setText(parser.get('Preset', 'path_2'))
                 self.insta_allFolderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt_3'))))
                 self.insta_allEditPath.setText(parser.get('Preset', 'path_3'))
+                self.twitt_allRetweet.setChecked(bool(int(parser.get('Preset', 'retwt'))))
                 self.twitt_allFolderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt_4'))))
                 self.twitt_allEditPath.setText(parser.get('Preset', 'path_4'))
                 self.insta_segFolderSeparate.setChecked(bool(int(parser.get('Preset', 'sprt_5'))))
