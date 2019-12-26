@@ -7,7 +7,7 @@ Image Downloader for DCinside TWICE gallery.
 본 프로그램은 Python 3.6.8 & PyQt5 으로 작성되었으며, 프로그램 사용에 의해 발생하는 모든 책임은 사용자 본인에게 있습니다.
 
 # Description
-TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https://gall.dcinside.com/board/lists/?id=twice)와 멤버 갤러리([나](https://gall.dcinside.com/board/lists/?id=nayeone)[정](https://gall.dcinside.com/mgallery/board/lists/?id=jungyeon)[모](https://gall.dcinside.com/mgallery/board/lists/?id=momo)[사](https://gall.dcinside.com/board/lists/?id=sanarang)[지](https://gall.dcinside.com/mgallery/board/lists/?id=jihyo)[미](https://gall.dcinside.com/mgallery/board/lists/?id=twicemina)[다](https://gall.dcinside.com/board/lists/?id=dahyeon)[채](https://gall.dcinside.com/mgallery/board/lists/?id=sonchaeyoung)[쯔](https://gall.dcinside.com/mgallery/board/lists/?id=tzuyu0614)), [TWICE TV 마이너 갤러리](https://gall.dcinside.com/mgallery/board/lists/?id=twicetv), 그리고 [스트리밍 마이너 갤러리](https://gall.dcinside.com/mgallery/board/lists/?id=streaming) 에서 이미지를 다운받는 프로그램입니다.  
+TWICE 갤러리 짤 다운로더는 디시인사이드 [TWICE 갤러리](https://gall.dcinside.com/board/lists/?id=twice_new)와 [이전 TWICE 갤러리](https://gall.dcinside.com/board/lists/?id=twice), 멤버 갤러리([나](https://gall.dcinside.com/board/lists/?id=nayeone)[정](https://gall.dcinside.com/mgallery/board/lists/?id=jungyeon)[모](https://gall.dcinside.com/mgallery/board/lists/?id=momo)[사](https://gall.dcinside.com/board/lists/?id=sanarang)[지](https://gall.dcinside.com/mgallery/board/lists/?id=jihyo)[미](https://gall.dcinside.com/mgallery/board/lists/?id=twicemina)[다](https://gall.dcinside.com/board/lists/?id=dahyeon)[채](https://gall.dcinside.com/mgallery/board/lists/?id=sonchaeyoung)[쯔](https://gall.dcinside.com/mgallery/board/lists/?id=tzuyu0614)), [TWICE TV 마이너 갤러리](https://gall.dcinside.com/mgallery/board/lists/?id=twicetv), 그리고 [스트리밍 마이너 갤러리](https://gall.dcinside.com/mgallery/board/lists/?id=streaming) 에서 이미지를 다운받는 프로그램입니다.  
 또한 해당 갤러리의 ID를 이용하여 이미지를 검색하기 때문에 앞서 언급한 갤러리 이외의 갤러리에서도 다운로드가 가능합니다.
 
 ### 프로그램 설명
@@ -117,6 +117,18 @@ DC 갤러리 / 인스타그램 다운로드 이미지 미리보기 기능 추가
 
 * [v1.52](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.52) - 2019/09/24  
 DC 갤러리 다운로드 이미지 엑박 오류 수정  
+
+* [v1.6](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.6) - 2019/12/27  
+DC갤러리 탭 콤보박스 리스트에 새 트와이스 갤러리와 이전 트와이스 갤러리 추가  
+DC갤러리 다운로드 된 목록 글의 내용 미리보기 기능 추가  
+DC갤러리 재다운로드 오류 수정  
+DC 마이너 갤러리 말머리 필터링 기능 추가  
+DC갤러리 제외 단어 필터링 오류 수정  
+DC갤러리 글 로딩 실패 시 트리뷰 목록 색 변화 기능 추가  
+스타데일리뉴스 기사짤 다운로드 기능 추가  
+텐아시아 기사짤 다운로드 오류 수정  
+트위터 다운로드 기능 추가  
+Linux 및 macOS 환경 지원  
 
 # Contact
 본 TWICE 갤러리 짤 다운로더와 관련 문의사항은 아래 오픈카톡 주소로 연락바랍니다.  
