@@ -109,7 +109,12 @@ class Worker(QObject):
                         self._init_title.append(data_obj.text.strip())
                         self._init_link.append(data_obj.get("href"))
                         self._init_number.append(i.parent.find("td", {"class": "gall_num"}).text)
-                        self._init_subject.append(i.parent.find("td", {"class": "gall_subject"}).text)
+                        
+                        if i.parent.find("td", {"class": "gall_subject"}).find('p'):
+                            self._init_subject.append(i.parent.find("td", {"class": "gall_subject"}).find('p').text)
+                        else:
+                            self._init_subject.append(i.parent.find("td", {"class": "gall_subject"}).text)
+
                 else: # Minor gallery with title
                     for i in data:
                         if i.parent.find("td", {"class": "gall_num"}).text == '공지':
