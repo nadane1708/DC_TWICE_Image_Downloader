@@ -370,7 +370,9 @@ class Worker(QObject):
                     del self._search_title[i]
                     del self._search_link[i]
                     del self._search_number[i]
-                    del self._search_subject[i]
+                    
+                    if hdline and (self.is_major == False):
+                        del self._search_subject[i]
 
                     self._search_title.insert(0, temp_except[0])
                     self._search_link.insert(0, temp_except[1])
