@@ -133,6 +133,9 @@ Linux 및 macOS 환경 지원
 * [v1.61](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.61) - 2020/07/16  
 DC갤러리 제외 단어 필터링 오류 수정  
 
+* [v1.62](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.62) - 2020/09/07  
+인스타그램, 트위터 다운로드 오류 수정  
+
 # Contact
 본 TWICE 갤러리 짤 다운로더와 관련 문의사항은 아래 오픈카톡 주소로 연락바랍니다.  
 https://open.kakao.com/o/sfmnlrpb  
