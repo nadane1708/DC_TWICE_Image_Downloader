@@ -49,17 +49,27 @@ class Worker(QObject):
         page = req.get('https://www.instagram.com/' + user + '/')
         data = html.fromstring(page.content)
         link = data.xpath("//head/link[@rel = 'preload']/@href")
-        page = req.get('https://www.instagram.com' + link[-1], headers=self._header).text # ProfilePageContainer.js
-        ind = page.find('queryId')
+
+        '''
+        page = req.get('https://www.instagram.com' + link[-5], headers=self._header).text # ConsumerLibCommons.js
+        ind = page.rfind('FEED_QUERY_ID')
+        ind += 16
+
+        st_ind = ind
+        lst_ind = page.find('"', ind)
+
+        feed_query_id = page[st_ind:lst_ind]
+        '''
+
+        page = req.get('https://www.instagram.com' + link[-2], headers=self._header).text # Consumer.js
+        ind = page.rfind('queryId:"')
         ind += 9
-        ind = page.find('queryId', ind)
-        ind += 9
-        ind = page.find('queryId', ind)
-        ind += 9
+
         st_ind = ind
         lst_ind = page.find('"', ind)
 
         query_id = page[st_ind:lst_ind]
+
         user_id = res['graphql']['user']['id']
         url_list = dict()
         query_hash = ''
@@ -69,14 +79,16 @@ class Worker(QObject):
         self.finished.emit('해당 계정의 글을 불러옵니다. (%s)' % len(url_list))
         try:
             while(True):
+
+                '''
                 if not graph:
                     query_hash = res['graphql']['user']['edge_owner_to_timeline_media']['page_info']['end_cursor']
+                '''
 
                 hash_url = 'https://www.instagram.com/graphql/query/?query_hash=%s&variables={"id":"%s","first":12,"after":"%s"}' % (query_id, user_id, query_hash)
                 graph = req.get(hash_url, headers=self._header)
 
                 graph = graph.json()
-
 
                 for i in graph['data']['user']['edge_owner_to_timeline_media']['edges']:
                     if i['node']['__typename'] == 'GraphImage':
@@ -183,13 +195,14 @@ class Worker_2(QObject):
         self._header = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36'
         }
-        self._video_header = {
+        self._auth_header = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
-            'authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA' 
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36',
+            'authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
+            #'x-guest-token': '1287689195054497793'
         }
 
     # I have referred to the code at following address: https://github.com/dc-koromo/koromo-copy/blob/master/Koromo_Copy.Framework/Extractor/TwitterExtractor.cs
@@ -199,88 +212,67 @@ class Worker_2(QObject):
         media_list = []
 
         try:
-            self.finished.emit('해당 ID의 계정을 확인 중 입니다.')
-            res = req.get('https://twitter.com/%s' % user, headers=self._header)
+            self.finished.emit('게스트 토큰을 받아오는 중 입니다.')
+            res = req.get('https://twitter.com/', self._header).text
+            ind = res.find('("gt=')
+            if ind == -1:
+                self.finished_err.emit(['1', '게스트 토큰을 받아올 수 없습니다.', '잠시 후에 다시 시도해주시기 바랍니다.'])
+                return
+            ind += 5
+
+            st_ind = ind
+            lst_ind = res.find(';', ind)
+            guest_token = res[st_ind:lst_ind]
+
+            print(guest_token)
+
+            self._auth_header['x-guest-token'] = guest_token
         except Exception as E:
             self.finished_err.emit(['2', E])
             return
 
-        docs = html.fromstring(res.content)
         try:
-            min_pos = docs.xpath('//*[@id="timeline"]/div/@data-min-position')[0]
+            self.finished.emit('해당 ID의 계정을 확인 중 입니다.')
+            res = req.get('https://api.twitter.com/graphql/-xfUfZsnR_zqjFd-IfrN5A/UserByScreenName?variables={"screen_name":"%s","withHighlightedLabel":true}' % user, headers=self._auth_header).json()
         except Exception as E:
-            if 'out of range' in str(E):
+            self.finished_err.emit(['2', E])
+            return
+
+        try:
+            if res['data'] == {}:
                 self.finished_err.emit(['1', '검색하신 페이지를 확인할 수 없습니다.', '해당 주소를 확인하고 다시 시도해주시기 바랍니다.'])
                 return
-            else:
-                self.finished_err.emit(['2', E])
+
+            tweet_user = res['data']['user']['legacy']['screen_name']
+            if user.lower() != tweet_user.lower():
+                self.finished_err.emit(['1', '검색하신 페이지를 확인할 수 없습니다.', '해당 주소를 확인하고 다시 시도해주시기 바랍니다.'])
                 return
 
-        tweets = docs.xpath("//*/li[@data-item-type='tweet']")
-        if tweets == []:
-            self.finished_err.emit(['1', '검색하신 페이지를 확인할 수 없습니다.', '해당 주소를 확인하고 다시 시도해주시기 바랍니다.'])
+            tweet_userid = res['data']['user']['rest_id']
+        except Exception as E:
+            self.finished_err.emit(['2', E])
             return
 
         self.finished.emit('해당 계정의 글을 불러옵니다. (%s)' % len(media_list))
 
-        # First page
-        for i in tweets:
-            parse_list = []
-            tweet_user = i.xpath(".//div[1]/@data-screen-name")[0]
-            tweet_id = i.xpath(".//div[1]/@data-tweet-id")[0]
-            has_img = i.xpath(".//*[@class='AdaptiveMedia-container']//img/@src")
-            has_video = i.xpath(".//*[@class='AdaptiveMediaOuterContainer']//div[@class='AdaptiveMedia-video']")
+        cursor = ''
 
-            if not retwt:
-                if not user == tweet_user:
-                    continue
-
-            if has_img:
-                parse_list.append(tweet_user)
-                parse_list.append(tweet_id)
-                parse_list.append(has_img)
-            elif has_video:
-                parse_list.append(tweet_user)
-                parse_list.append(tweet_id)
-
-                try:
-                    video_json = req.get('https://api.twitter.com/1.1/statuses/show.json?include_profile_interstitial_type=1&include_blocking=1&include_blocked_by=1&include_followed_by=1&include_want_retweets=1&include_mute_edge=1&include_can_dm=1&skip_status=1&cards_platform=Web-12&include_cards=1&include_ext_alt_text=true&include_reply_count=1&tweet_mode=extended&trim_user=false&include_ext_media_color=true&id=%s' % tweet_id, headers=self._video_header)
-                except Exception as E:
-                    self.finished_err.emit(['2', E])
-                    return
-                video_json = video_json.json()
-                variants = video_json['extended_entities']['media'][0]['video_info']['variants']
-                if isinstance(variants, list):
-                    for i in variants:
-                        if 'mp4' in i['content_type']:
-                            parse_list.append(i['url'])
-                            break
-                else:
-                    parse_list.append(variants[0]['url'])
-
-                QThread.msleep(1000)
-
-            if not parse_list == []:
-                media_list.append(parse_list)
-
-            self.finished.emit('해당 계정의 글을 불러옵니다. (%s)' % len(media_list))
-
-        # Loop for pages after first. Second page, Third page, and so on.
         while(True):
-            if retwt:
-                api_url = 'https://twitter.com/i/profiles/show/%s/timeline/tweets?include_available_features=1&include_entities=1&max_position=%s&reset_error_state=false' % (user, min_pos)
-            else:
-                api_url = 'https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1&include_entities=1&max_position=%s&reset_error_state=false' % (user, min_pos)
+            api_url = 'https://api.twitter.com/2/timeline/profile/%s.json?include_profile_interstitial_type=1&include_blocking=1&include_blocked_by=1&include_followed_by=1&include_want_retweets=1&include_mute_edge=1&include_can_dm=1&include_can_media_tag=1&skip_status=1&cards_platform=Web-12&include_cards=1&include_ext_alt_text=true&include_quote_count=true&include_reply_count=1&tweet_mode=extended&include_entities=true&include_user_entities=true&include_ext_media_color=true&include_ext_media_availability=true&send_error_codes=true&simple_quoted_tweet=true&include_tweet_replies=false&userId=%s&count=20%s&ext=mediaStats%%2ChighlightedLabel' % (tweet_userid, tweet_userid, '&cursor=%s' % cursor if cursor else '')
 
             try:
-                api_json = req.get(api_url, headers=self._header).json()
+                api_json = req.get(api_url, headers=self._auth_header).json()
             except Exception as E:
                 self.finished_err.emit(['2', E])
                 return
 
-            min_pos = api_json['min_position']
-            docs = html.fromstring(api_json['items_html'])
-            tweets = docs.xpath("//*/li[@data-item-type='tweet']")
+            if not 'globalObjects' in api_json:
+                print('tweet end')
+                break
+
+            tweets = api_json['globalObjects']['tweets']
+            cursor = urlparse.quote(api_json['timeline']['instructions'][0]['addEntries']['entries'][-1]['content']['operation']['cursor']['value'])
+            print(cursor)
 
             if tweets == []:
                 print('None tweets array')
@@ -288,36 +280,21 @@ class Worker_2(QObject):
 
             for i in tweets:
                 parse_list = []
-                tweet_user = i.xpath(".//div[1]/@data-screen-name")[0]
-                tweet_id = i.xpath(".//div[1]/@data-tweet-id")[0]
-                has_img = i.xpath(".//*[@class='AdaptiveMediaOuterContainer']//img/@src")
-                has_video = i.xpath(".//*[@class='AdaptiveMediaOuterContainer']//div[@class='AdaptiveMedia-video']")
+                tweet_user = user
+                tweet_id = i
 
-                if has_img: # multiple images
-                    parse_list.append(tweet_user)
-                    parse_list.append(tweet_id)
-                    parse_list.append(has_img)    
-                elif has_video:
-                    parse_list.append(tweet_user)
-                    parse_list.append(tweet_id)
-
-                    try:
-                        video_json = req.get('https://api.twitter.com/1.1/statuses/show.json?include_profile_interstitial_type=1&include_blocking=1&include_blocked_by=1&include_followed_by=1&include_want_retweets=1&include_mute_edge=1&include_can_dm=1&skip_status=1&cards_platform=Web-12&include_cards=1&include_ext_alt_text=true&include_reply_count=1&tweet_mode=extended&trim_user=false&include_ext_media_color=true&id=%s' % tweet_id, headers=self._video_header)
-                        video_json = video_json.json()
-                    except Exception as E:
-                        self.finished_err.emit(['2', E])
-                        return
-
-                    variants = video_json['extended_entities']['media'][0]['video_info']['variants']
-                    if isinstance(variants, list):
-                        for i in variants:
-                            if 'mp4' in i['content_type']:
-                                parse_list.append(i['url'])
-                                break
+                if 'extended_entities' in tweets[i]:
+                    if tweets[i]['extended_entities']['media'][0]['type'] == 'video':
+                        parse_list.append(tweet_user)
+                        parse_list.append(tweet_id)
+                        parse_list.append(tweets[i]['extended_entities']['media'][0]['video_info']['variants'][0]['url'])
                     else:
-                        parse_list.append(variants[0]['url'])
-
-                    QThread.msleep(500)
+                        media = tweets[i]['extended_entities']['media']
+                        has_img = []
+                        has_img = [x['media_url_https'] for x in media]
+                        parse_list.append(tweet_user)
+                        parse_list.append(tweet_id)
+                        parse_list.append(has_img)
 
                 if not parse_list == []:
                     media_list.append(parse_list)
@@ -325,8 +302,10 @@ class Worker_2(QObject):
                 self.finished.emit('해당 계정의 글을 불러옵니다. (%s)' % len(media_list))
                 QThread.msleep(500)
 
-            if not api_json['has_more_items']:
-                print('no more')
+            QThread.msleep(1000)
+
+            if cursor == '':
+                print('no cursor anymore')
                 break
 
         if not os.path.isdir(path):
@@ -536,47 +515,58 @@ class Worker_3(QObject):
     @pyqtSlot()
     def tw_segDownload(self, url, sprt, path, status):
         try:
-            res = req.get(url, headers=self._header)
+            self.finished.emit('게스트 토큰을 받아오는 중 입니다.')
+            res = req.get('https://twitter.com/', self._header).text
+            ind = res.find('("gt=')
+            if ind == -1:
+                self.finished_err.emit(['1', '게스트 토큰을 받아올 수 없습니다.', '잠시 후에 다시 시도해주시기 바랍니다.'])
+                return
+            ind += 5
+
+            st_ind = ind
+            lst_ind = res.find(';', ind)
+            guest_token = res[st_ind:lst_ind]
+
+            print(guest_token)
+
+            self._video_header['x-guest-token'] = guest_token
         except Exception as E:
             self.finished_err.emit(['2', E])
             return
 
-        docs = html.fromstring(res.content)
         try:
-            tweet_html = docs.xpath(".//*[@class='permalink-inner permalink-tweet-container']")[0]
+            api_url = 'https://api.twitter.com/2/timeline/conversation/%s.json?include_profile_interstitial_type=1&include_blocking=1&include_blocked_by=1&include_followed_by=1&include_want_retweets=1&include_mute_edge=1&include_can_dm=1&include_can_media_tag=1&skip_status=1&cards_platform=Web-12&include_cards=1&include_ext_alt_text=true&include_quote_count=true&include_reply_count=1&tweet_mode=extended&include_entities=true&include_user_entities=true&include_ext_media_color=true&include_ext_media_availability=true&send_error_codes=true&simple_quoted_tweet=true&count=20&include_ext_has_birdwatch_notes=false&ext=mediaStats%%2ChighlightedLabel' % url.split('/')[-1]
+            api_json = req.get(api_url, headers=self._video_header).json()
         except Exception as E:
-            if 'out of range' in str(E):
-                self.finished_err.emit(['1', '검색하신 페이지를 확인할 수 없습니다.', '해당 주소를 확인하고 다시 시도해주시기 바랍니다.'])
-                return
-            else:
-                self.finished_err.emit(['2', E])
-                return
+            self.finished_err.emit(['2', E])
+            return
 
-        tweet_user = tweet_html.xpath(".//div[1]/@data-screen-name")[0]
-        tweet_id = tweet_html.xpath(".//div[1]/@data-tweet-id")[0]
-        has_img = tweet_html.xpath(".//*[@class='AdaptiveMedia-container']//img/@src")
-        has_video = tweet_html.xpath(".//*[@class='AdaptiveMediaOuterContainer']//div[@class='AdaptiveMedia-video']")
+        if not 'globalObjects' in api_json:
+            print(api_json)
+            print('no info')
+            self.finished_err.emit(['1', '검색하신 페이지를 확인할 수 없습니다.', '해당 주소를 확인하고 다시 시도해주시기 바랍니다.'])
+            return
 
-        if has_img:
-            src = has_img
-        elif has_video:
+        tweets = api_json['globalObjects']['tweets']
+
+        if tweets == []:
+            print('None tweets array')
+            self.finished_err.emit(['1', '검색하신 페이지를 확인할 수 없습니다.', '해당 주소를 확인하고 다시 시도해주시기 바랍니다.'])
+            return
+
+        tweet_id = sorted(list(tweets.keys()))[0]
+        tweet = tweets[tweet_id]
+        tweet_user = api_json['globalObjects']['users'][tweet['user_id_str']]['screen_name']
+
+        if tweet['extended_entities']['media'][0]['type'] == 'video':
             src = []
+            src.append(tweet['extended_entities']['media'][0]['video_info']['variants'][0]['url'])
+        else:
+            media = tweet['extended_entities']['media']
+            src = []
+            src = [x['media_url_https'] for x in media]
 
-            try:
-                video_json = req.get('https://api.twitter.com/1.1/statuses/show.json?include_profile_interstitial_type=1&include_blocking=1&include_blocked_by=1&include_followed_by=1&include_want_retweets=1&include_mute_edge=1&include_can_dm=1&skip_status=1&cards_platform=Web-12&include_cards=1&include_ext_alt_text=true&include_reply_count=1&tweet_mode=extended&trim_user=false&include_ext_media_color=true&id=%s' % tweet_id, headers=self._video_header)
-                video_json = video_json.json()
-            except Exception as E:
-                self.finished_err.emit(['2', E])
-                return
-
-            variants = video_json['extended_entities']['media'][0]['video_info']['variants']
-            if isinstance(variants, list):
-                for i in variants:
-                    if 'mp4' in i['content_type']:
-                        src.append(i['url'])
-                        break
-            else:
-                src.append(variants[0]['url'])
+        QThread.msleep(1000)
 
         if not os.path.isdir(path):
             try:
