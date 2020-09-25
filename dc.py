@@ -5,6 +5,7 @@ import os
 import time
 import re
 import platform
+from fake_useragent import UserAgent
 
 
 class Worker(QObject):
@@ -139,7 +140,9 @@ class Worker(QObject):
     # Get html from gallery post & Make link and file name lists
     @pyqtSlot()
     def get_image(self, sprt, drtry):
-        for i in range(0, len(self._search_title)):            
+        ua = UserAgent()
+        for i in range(0, len(self._search_title)):
+            self._header['User-Agent'] = ua.random
             try:
                 title = '[%s] %s' % (self._search_number[i], self._search_title[i])
                 res = req.get('https://gall.dcinside.com%s' % self._search_link[i], headers=self._header)
@@ -182,6 +185,9 @@ class Worker(QObject):
             except Exception as E:
                 self.finished_err.emit(['2', E])
                 return
+
+        ua = UserAgent()
+        self._image_header['User-Agent'] = ua.random
 
         if title:
             title = re.sub("[/\\:*?\"<>|.]", "_", title) # Remove special characters from folder name
@@ -468,6 +474,9 @@ class retryWorker(QObject):
                 self.finished_err.emit(['2', E])
                 return
 
+        ua = UserAgent()
+        self._image_header['User-Agent'] = ua.random
+
         if title:
             title = re.sub("[/\\:*?\"<>|.]", "_", title) # Remove special characters from folder name
             title = re.sub("\n", "_", title) # Remove line feed character from folder name
@@ -510,7 +519,9 @@ class retryWorker(QObject):
 
     @pyqtSlot()
     def retry_download(self, re_list):
+        ua = UserAgent()
         for i in range(0, len(re_list[0])):
+            self._image_header['User-Agent'] = ua.random
             try:
                 re_res = req.get('%s' % re_list[0][i][1], headers=self._header)
                 re_postSoup = BeautifulSoup(re_res.text, "html.parser")
