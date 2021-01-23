@@ -79,6 +79,9 @@ class Worker(QObject):
             pageSoup = BeautifulSoup(res.text, "html.parser")
             data = pageSoup.find_all("td", {"class": "gall_tit ub-word"})
 
+            if not data: # if there is no articles in the page
+                return
+
             if self.is_major: # Major gallery
                 for i in data:
                     if i.parent.find("td", {"class": "gall_num"}).text == '공지':
