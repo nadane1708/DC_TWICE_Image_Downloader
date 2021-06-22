@@ -17,6 +17,7 @@ class Worker(QObject):
 
         self._major_url = 'https://gall.dcinside.com/board/lists/?id='
         self._minor_url = 'https://gall.dcinside.com/mgallery/board/lists?id='
+        self._mini_url = 'https://gall.dcinside.com/mini/board/lists/?id='
         self._header = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
@@ -35,7 +36,7 @@ class Worker(QObject):
     @pyqtSlot()
     def check_gall(self, idx):
         try:
-            res = req.get('%s%s' % (self._major_url, idx), headers=self._header)
+            res = req.get('%s%s' % (self._mini_url, idx[1:]) if idx.startswith('$') else (self._major_url, idx), headers=self._header)
             gallSoup = BeautifulSoup(res.text, "html.parser")
             meta_data = gallSoup.find_all("meta", {"name": "title"})
             is_exist = re.findall('갤러리 접속 에러', res.text)
@@ -47,8 +48,8 @@ class Worker(QObject):
             self.finished_err.emit(['1', '검색하신 갤러리를 확인할 수 없습니다.', '갤러리 id를 확인하고 다시 시도해주시기 바랍니다.'])
             return -1
 
-        if not meta_data:
-            return False # Minor gallery
+        if not meta_data or idx.startswith('$'):
+            return False # Minor or Mini gallery
 
         # Major gallery
         return True
@@ -173,7 +174,7 @@ class Worker(QObject):
                         self.download_image(j.get("href"), '[%s] %s' % (self._search_number[i], (j.text if j.text else 'null')), drtry)
                 self.finished_err.emit(['3', '0', title, '', 'https://gall.dcinside.com%s' % self._search_link[i], post_content])
             except Exception as E:
-                print('get image \n %s' % str(E))
+                # print('get image \n %s' % str(E))
                 self.finished_err.emit(['3', '0', title, '로드 실패', 'https://gall.dcinside.com%s' % self._search_link[i], ''])
                 QThread.msleep(1300)
 
@@ -212,7 +213,6 @@ class Worker(QObject):
                     file.close()
                 self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
             except Exception as E:
-                file.close()
                 # print('download image \n %s' % str(E))
                 self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
                 return
@@ -224,7 +224,6 @@ class Worker(QObject):
                     file.close()
                 self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
             except Exception as E:
-                file.close()
                 # print('download image \n %s' % str(E))
                 self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
                 return
@@ -266,6 +265,8 @@ class Worker(QObject):
             return
 
         url = '%s%s' % ((self._major_url if self.is_major else self._minor_url), idx)
+        if idx.startswith('$'):
+            url = '%s%s' % (self._mini_url, idx[1:])
 
         self.get_final_page(url, rcmd) # Get the final page number for downloading whole pages and for additional purpose in the future
 
@@ -500,8 +501,7 @@ class retryWorker(QObject):
                     file.close()
                 self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
             except Exception as E:
-                file.close()
-                print('download image \n %s' % str(E))
+                # print('download image \n %s' % str(E))
                 self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
                 return
         else:
@@ -512,8 +512,7 @@ class retryWorker(QObject):
                     file.close()
                 self.finished_err.emit(['3', '1', filename, '성공', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
             except Exception as E:
-                file.close()
-                print('download image \n %s' % str(E))
+                # print('download image \n %s' % str(E))
                 self.finished_err.emit(['3', '1', filename, '실패', '%s' % url.replace('download.php', 'viewimage.php'), img.content])
                 return
 
@@ -552,7 +551,7 @@ class retryWorker(QObject):
                         self.download_image(j.get("href"), '[%s] %s' % (number, (j.text if j.text else 'null')), re_list[2])
                 self.finished_err.emit(['3', '0', re_list[0][i][0], '', '%s' % re_list[0][i][1], re_post_content])
             except Exception as E:
-                print(str(E))
+                # print(str(E))
                 self.finished_err.emit(['3', '0', re_list[0][i][0], '로드 실패', '%s' % re_list[0][i][1], ''])
                 QThread.msleep(1300)
 
