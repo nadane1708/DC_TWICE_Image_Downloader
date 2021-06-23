@@ -79,8 +79,13 @@
        <bool>true</bool>
       </property>
       <property name="maxVisibleItems">
-       <number>13</number>
+       <number>14</number>
       </property>
+      <item>
+       <property name="text">
+        <string>트와이스 유튜브 갤러리</string>
+       </property>
+      </item>
       <item>
        <property name="text">
         <string>TWICE 갤러리</string>
