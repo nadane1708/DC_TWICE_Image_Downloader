@@ -142,6 +142,8 @@ class Worker(QObject):
             img_name = urlparse.unquote(img_url.split('/')[-1])
             if img_name[-4:] == '.jpg':
                 img_url = img_tag[i].get('data-org')
+                if img_url is None: # Maybe image which we don't want to download
+                    continue
                 img_name = urlparse.unquote(img_url.split('/')[-1])
             elif not img_name[-4:] == '.gif':
                 continue
@@ -294,16 +296,14 @@ class Worker(QObject):
                 self.finished_err.emit(['2', E])
                 return
 
-        caption_tag = taSoup.find_all("div", {"class": "wp-caption aligncenter"})
+        caption_tag = taSoup.find_all("div", {"class": "figure-img"})
 
         for i in range(0, len(caption_tag)):
-            img_url = caption_tag[i].find('img').get('srcset').split(',')[-1]
-            img_url = re.sub(" \d+w", "", img_url)
+            img_url = caption_tag[i].find('img').get('src').split(',')[-1]
             if img_url is None: # No image tag
                 continue
 
             img_name = urlparse.unquote(img_url.split(',')[-1].split('/')[-1])
-            img_name = re.sub(" \d+w", "", img_name)
 
             self.finished.emit('다운로드 중 (%s): %s' % (status, img_name))
 
@@ -352,7 +352,7 @@ class Worker(QObject):
     def news1(self, url, sprt, path, status):
         try:
             res = req.get(url, headers=self._header)
-            n1Soup = BeautifulSoup(res.text, "html.parser")
+            n1Soup = BeautifulSoup(res.text.encode('ISO-8859-1').decode('utf-8'), "html.parser")
         except:
             self.finished_err.emit(['4', '0', '', '로드 실패', url])
             QThread.msleep(1300)
@@ -374,7 +374,10 @@ class Worker(QObject):
                 self.finished_err.emit(['2', E])
                 return
 
-        img_tag = n1Soup.find("div", {"class": "article"}).find_all('img')
+        try:
+            img_tag = n1Soup.find("div", {"class": "article"}).find_all('img')
+        except AttributeError:
+            img_tag = n1Soup.find("div", {"class": "img_area"}).find_all('img')
 
         for i in range(0, len(img_tag)):
             img_url = img_tag[i].get('src')
