@@ -4,7 +4,7 @@ Image Downloader for DCinside TWICE gallery.
 디시인사이드 TWICE 갤러리 짤 다운로더
 
 # Caution
-본 프로그램은 Python 3.6.8 & PyQt5 으로 작성되었으며, 프로그램 사용에 의해 발생하는 모든 책임은 사용자 본인에게 있습니다.
+본 프로그램은 Python 3.7.6 & PyQt5 으로 작성되었으며, 프로그램 사용에 의해 발생하는 모든 책임은 사용자 본인에게 있습니다.
 
 # Release
 * [v1.0](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.0) - 2019/04/15  
@@ -88,6 +88,13 @@ DC갤러리 제외 단어 필터링 오류 수정
 
 * [v1.62](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.62) - 2020/09/07  
 인스타그램, 트위터 다운로드 오류 수정  
+
+* [v1.63](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.63) - 2021/07/03  
+DC갤러리 이미지 다운로드 시 랜덤 UserAgent 적용  
+DC갤러리 다운로드 오류 수정  
+DC 미니 갤러리 다운로드 기능 추가  
+톱스타뉴스, 텐아시아, 뉴스원 기사 이미지 다운로드 오류 수정  
+DC갤러리 탭의 콤보박스 리스트에 트와이스 유튜브 마이너 갤러리 추가  
 
 # Contact
 본 TWICE 갤러리 짤 다운로더와 관련 문의사항은 아래 오픈카톡 주소로 연락바랍니다.  
