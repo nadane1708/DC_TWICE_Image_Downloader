@@ -36,7 +36,7 @@ class Worker(QObject):
     @pyqtSlot()
     def check_gall(self, idx):
         try:
-            res = req.get('%s%s' % (self._mini_url, idx[1:]) if idx.startswith('$') else (self._major_url, idx), headers=self._header)
+            res = req.get('%s%s' % (self._mini_url, idx[1:]) if idx.startswith('$') else '%s%s' % (self._major_url, idx), headers=self._header)
             gallSoup = BeautifulSoup(res.text, "html.parser")
             meta_data = gallSoup.find_all("meta", {"name": "title"})
             is_exist = re.findall('갤러리 접속 에러', res.text)
