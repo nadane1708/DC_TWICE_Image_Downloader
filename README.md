@@ -96,10 +96,6 @@ DC 미니 갤러리 다운로드 기능 추가
 톱스타뉴스, 텐아시아, 뉴스원 기사 이미지 다운로드 오류 수정  
 DC갤러리 탭의 콤보박스 리스트에 트와이스 유튜브 마이너 갤러리 추가  
 
-# Contact
-본 TWICE 갤러리 짤 다운로더와 관련 문의사항은 아래 오픈카톡 주소로 연락바랍니다.  
-https://open.kakao.com/o/sfmnlrpb  
-
 # Thanks to
 [트갤차트봇](https://gall.dcinside.com/board/view?id=twice&no=3939753) - Inspired by his/her program  
 [Zard](https://gallog.dcinside.com/blueaqua1019) (DC TWICE Gallery) - Beta Tester & Feedback  
