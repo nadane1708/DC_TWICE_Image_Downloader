@@ -56,6 +56,8 @@ class Worker(QObject):
         soupScript = BeautifulSoup(soupClass.script.string, "html.parser")
         img_tag = soupScript.find_all('img')
 
+        fnames = []
+
         for i in range(0, len(img_tag)):
             img_url = re.sub('\?type=\S+$', '', img_tag[i].get('data-src'))
             if not 'post-phinf.pstatic.net' in img_url: # This image isn't what you want to download.
@@ -64,6 +66,12 @@ class Worker(QObject):
             img_name = urlparse.unquote(img_url.split('/')[-1])
 
             self.finished.emit('다운로드 중 (%s): %s' % (status, img_name))
+
+            img_ext = re.search(r'\.[a-zA-Z]+$', img_name).group()
+            dupl = fnames.count(img_name.lower())
+            if dupl > 0:
+                img_name = img_name.replace(img_ext, ' (%d)' % dupl + img_ext)
+            fnames.append(img_name.lower())
 
             if sprt:
                 if not os.path.isdir('%s%s' % (path, na_title)):
