@@ -96,6 +96,10 @@ DC 미니 갤러리 다운로드 기능 추가
 톱스타뉴스, 텐아시아, 뉴스원 기사 이미지 다운로드 오류 수정  
 DC갤러리 탭의 콤보박스 리스트에 트와이스 유튜브 마이너 갤러리 추가  
 
+* [v1.64](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.64) - 2022/09/08  
+네이버 포스트 동일 이름의 파일을 덮어씌우는 오류 수정  
+프로그램명 변경  
+
 # Thanks to
 [트갤차트봇](https://gall.dcinside.com/board/view?id=twice&no=3939753) - Inspired by his/her program  
 [Zard](https://gallog.dcinside.com/blueaqua1019) (DC TWICE Gallery) - Beta Tester & Feedback  
