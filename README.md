@@ -100,6 +100,11 @@ DC갤러리 탭의 콤보박스 리스트에 트와이스 유튜브 마이너 �
 네이버 포스트 동일 이름의 파일을 덮어씌우는 오류 수정  
 프로그램명 변경  
 
+# How to Build
+```
+pyinstaller --clean -F -w -i icon.ico main.py
+```
+
 # Thanks to
 [트갤차트봇](https://gall.dcinside.com/board/view?id=twice&no=3939753) - Inspired by his/her program  
 [Zard](https://gallog.dcinside.com/blueaqua1019) (DC TWICE Gallery) - Beta Tester & Feedback  
