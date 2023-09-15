@@ -4,7 +4,7 @@ Image Downloader for DCinside TWICE gallery.
 디시인사이드 TWICE 갤러리 짤 다운로더
 
 # Caution
-본 프로그램은 Python 3.7.6 & PyQt5 으로 작성되었으며, 프로그램 사용에 의해 발생하는 모든 책임은 사용자 본인에게 있습니다.
+본 프로그램은 Python 3.6.8 x86 & PyQt5 으로 작성되었으며, 프로그램 사용에 의해 발생하는 모든 책임은 사용자 본인에게 있습니다.
 
 # Release
 * [v1.0](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.0) - 2019/04/15  
@@ -101,7 +101,11 @@ DC갤러리 탭의 콤보박스 리스트에 트와이스 유튜브 마이너 �
 프로그램명 변경  
 
 * [v1.65](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.65) - 2023/01/12  
-fake-useragent 디펜던시로 인해 프로그램이 실행되지 않는 오류 수정  
+fake-useragent 디펜던시로 인해 프로그램이 실행되지 않는 오류 수정
+
+* [v1.66](https://github.com/nadane1708/DC_TWICE_Image_Downloader/releases/tag/v1.66) - 2023/09/16  
+DC갤러리 탭 갤러리 id 기본값을 트와이스 유튜브 마이너 갤러리로 변경  
+나눔 스퀘어 폰트 적용 및 폰트 사이즈 조정  
 
 # How to Build
 ```
