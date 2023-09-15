@@ -67,7 +67,7 @@ class MyWindow(QMainWindow, form_class, QObject):
         self.selectGallery.setCompleter(self.completer)
 
         # ComboBox
-        self.selectGallery.setEditText('twice_new')
+        self.selectGallery.setEditText('twiceyou')
         self.selectGallery.activated.connect(self.selectionChanged)
 
         # PushButton
