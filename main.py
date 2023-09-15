@@ -499,6 +499,18 @@ class MyWindow(QMainWindow, form_class, QObject):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
+    fontDatabase = QFontDatabase()
+    fontDatabase.addApplicationFont('./res/NanumSquareR.ttf')
+    app.setFont(QFont('나눔스퀘어', 8))
+    app.setStyleSheet("""
+                      .QLabel#label_6,
+                      .QLabel#label_7,
+                      .QLabel#label_16 {
+                        font-size: 12px;
+                      }
+                      """)
+
     myWindow = MyWindow()
     myWindow.show()
     app.exec_()
