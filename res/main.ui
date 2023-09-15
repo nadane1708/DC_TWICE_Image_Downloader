@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>TWICE 짤 다운로더 v1.65</string>
+   <string>TWICE 짤 다운로더 v1.66</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -262,7 +262,7 @@
        <rect>
         <x>300</x>
         <y>90</y>
-        <width>81</width>
+        <width>85</width>
         <height>16</height>
        </rect>
       </property>
